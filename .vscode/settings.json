@@ -13,6 +13,7 @@
     "bin/": true
   },
   "java.format.settings.url": "https://raw.githubusercontent.com/google/styleguide/gh-pages/eclipse-java-google-style.xml",
+  "java.format.comments.enabled": false,
   "editor.formatOnSave": true,
   "cSpell.words": ["Excalidraw", "journaling", "leetcode", "Preorder"]
 }
