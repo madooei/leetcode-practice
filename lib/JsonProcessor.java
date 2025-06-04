@@ -90,32 +90,133 @@ public class JsonProcessor {
     }
 
     /**
-     * Parses a single JSON object string into a key-value map
+     * Unescapes a JSON string value
      * 
-     * @param obj The JSON object string to parse
-     * @return Map containing key-value pairs from the JSON object
+     * This method handles standard JSON escape sequences:
+     * - \" for double quotes
+     * - \\ for backslash
+     * - \/ for forward slash
+     * - \b for backspace
+     * - \f for form feed
+     * - \n for newline
+     * - \r for carriage return
+     * - \t for tab
+     * 
+     * @param value The JSON string value to unescape
+     * @return The unescaped string
      */
-    private static Map<String, String> parseJsonObject(String obj) {
+    private static String unescapeJsonString(String value) {
+        if (value == null || value.isEmpty()) {
+            return value;
+        }
+
+        // Remove surrounding quotes if present
+        if (value.startsWith("\"") && value.endsWith("\"")) {
+            value = value.substring(1, value.length() - 1);
+        }
+
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < value.length(); i++) {
+            char c = value.charAt(i);
+            if (c == '\\' && i + 1 < value.length()) {
+                char next = value.charAt(i + 1);
+                switch (next) {
+                    case '"':
+                        result.append('"');
+                        i++;
+                        break;
+                    case '\\':
+                        result.append('\\');
+                        i++;
+                        break;
+                    case '/':
+                        result.append('/');
+                        i++;
+                        break;
+                    case 'b':
+                        result.append('\b');
+                        i++;
+                        break;
+                    case 'f':
+                        result.append('\f');
+                        i++;
+                        break;
+                    case 'n':
+                        result.append('\n');
+                        i++;
+                        break;
+                    case 'r':
+                        result.append('\r');
+                        i++;
+                        break;
+                    case 't':
+                        result.append('\t');
+                        i++;
+                        break;
+                    case 'u':
+                        if (i + 5 < value.length()) {
+                            String hex = value.substring(i + 2, i + 6);
+                            try {
+                                result.append((char) Integer.parseInt(hex, 16));
+                                i += 5;
+                            } catch (NumberFormatException e) {
+                                result.append(c);
+                            }
+                        } else {
+                            result.append(c);
+                        }
+                        break;
+                    default:
+                        result.append(c);
+                }
+            } else {
+                result.append(c);
+            }
+        }
+        return result.toString();
+    }
+
+    /**
+     * Parses a single JSON object string into a map of key-value pairs
+     * 
+     * @param jsonObject The JSON object string to parse
+     * @return Map containing the parsed key-value pairs
+     * @throws RuntimeException if JSON format is invalid
+     */
+    private static Map<String, String> parseJsonObject(String jsonObject) {
         Map<String, String> result = new HashMap<>();
 
-        // Remove outer braces from object
-        obj = obj.trim();
-        if (obj.startsWith("{"))
-            obj = obj.substring(1);
-        if (obj.endsWith("}"))
-            obj = obj.substring(0, obj.length() - 1);
+        // Remove outer braces and trim
+        jsonObject = jsonObject.trim();
+        if (!jsonObject.startsWith("{") || !jsonObject.endsWith("}")) {
+            throw new RuntimeException("Invalid JSON object format");
+        }
+        jsonObject = jsonObject.substring(1, jsonObject.length() - 1).trim();
 
-        // Split object into key-value pairs
-        List<String> pairs = splitJsonPairs(obj);
+        if (jsonObject.isEmpty()) {
+            return result;
+        }
 
-        // Process each key-value pair
+        // Split into key-value pairs
+        List<String> pairs = splitJsonPairs(jsonObject);
+
+        // Parse each pair
         for (String pair : pairs) {
-            String[] keyValue = pair.split(":", 2); // Split on first colon only
-            if (keyValue.length == 2) {
-                String key = unquote(keyValue[0].trim());
-                String value = unquote(keyValue[1].trim());
-                result.put(key, value);
+            String[] keyValue = pair.split(":", 2);
+            if (keyValue.length != 2) {
+                throw new RuntimeException("Invalid key-value pair format: " + pair);
             }
+
+            String key = keyValue[0].trim();
+            String value = keyValue[1].trim();
+
+            // Remove quotes from key and unescape value
+            if (key.startsWith("\"") && key.endsWith("\"")) {
+                key = key.substring(1, key.length() - 1);
+            }
+            value = unescapeJsonString(value);
+
+            result.put(key, value);
         }
 
         return result;
@@ -156,19 +257,5 @@ public class JsonProcessor {
         }
 
         return pairs;
-    }
-
-    /**
-     * Removes surrounding quotes from a string if present
-     * 
-     * @param str The string to unquote
-     * @return The string with surrounding quotes removed, or original if no quotes
-     */
-    private static String unquote(String str) {
-        str = str.trim();
-        if (str.startsWith("\"") && str.endsWith("\"")) {
-            return str.substring(1, str.length() - 1);
-        }
-        return str;
     }
 }
