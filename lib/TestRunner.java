@@ -183,16 +183,18 @@ public class TestRunner {
         public String expected;
         public String actual;
         public String error;
+        public String description;
         public PerformanceResult performance;
 
         public TestResult(String testName, boolean passed, String input, String expected,
-                String actual, String error, PerformanceResult performance) {
+                String actual, String error, String description, PerformanceResult performance) {
             this.testName = testName;
             this.passed = passed;
             this.input = input;
             this.expected = expected;
             this.actual = actual;
             this.error = error;
+            this.description = description;
             this.performance = performance;
         }
     }
@@ -205,14 +207,90 @@ public class TestRunner {
         public int passed = 0;
         public int total = 0;
         public boolean showPerformance = false;
+        public String testFilePath = "";
 
         public void addResult(String testName, boolean passed, String input, String expected,
-                String actual, String error, PerformanceResult performance) {
-            results.add(
-                    new TestResult(testName, passed, input, expected, actual, error, performance));
+                String actual, String error, String description, PerformanceResult performance) {
+            results.add(new TestResult(testName, passed, input, expected, actual, error,
+                    description, performance));
             this.total++;
             if (passed)
                 this.passed++;
+        }
+
+        public void setTestFilePath(String path) {
+            this.testFilePath = path;
+        }
+
+        public void saveToFile() {
+            if (testFilePath.isEmpty()) {
+                System.err.println("Cannot save results: no test file path specified");
+                return;
+            }
+
+            try {
+                String resultsPath = generateResultsFilePath(testFilePath);
+                String jsonContent = generateResultsJson();
+                Files.writeString(Paths.get(resultsPath), jsonContent);
+                System.out.println("📄 Results saved to: " + resultsPath);
+            } catch (IOException e) {
+                System.err.println("Error saving results to file: " + e.getMessage());
+            }
+        }
+
+        private String generateResultsFilePath(String testFilePath) {
+            // Convert "hello-world/tests.json" to "hello-world/tests-results.json"
+            if (testFilePath.endsWith(".json")) {
+                return testFilePath.substring(0, testFilePath.length() - 5) + "-results.json";
+            } else {
+                return testFilePath + "-results.json";
+            }
+        }
+
+        private String generateResultsJson() {
+            StringBuilder json = new StringBuilder();
+            json.append("[\n");
+
+            for (int i = 0; i < results.size(); i++) {
+                TestResult result = results.get(i);
+                json.append("  {\n");
+                json.append("    \"name\": \"").append(escapeJson(result.testName)).append("\",\n");
+                json.append("    \"description\": \"").append(escapeJson(result.description))
+                        .append("\",\n");
+                json.append("    \"input\": \"").append(escapeJson(result.input)).append("\",\n");
+                json.append("    \"expected\": \"").append(escapeJson(result.expected))
+                        .append("\",\n");
+                json.append("    \"got\": \"").append(escapeJson(result.actual)).append("\",\n");
+                json.append("    \"status\": \"").append(result.passed ? "✅ PASS" : "❌ FAIL")
+                        .append("\"");
+
+                if (result.performance != null) {
+                    json.append(",\n    \"performance\": \"")
+                            .append(escapeJson(result.performance.toString())).append("\"");
+                }
+
+                if (result.error != null) {
+                    json.append(",\n    \"error\": \"").append(escapeJson(result.error))
+                            .append("\"");
+                }
+
+                json.append("\n  }");
+
+                if (i < results.size() - 1) {
+                    json.append(",");
+                }
+                json.append("\n");
+            }
+
+            json.append("]");
+            return json.toString();
+        }
+
+        private String escapeJson(String str) {
+            if (str == null)
+                return "";
+            return str.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n")
+                    .replace("\r", "\\r").replace("\t", "\\t");
         }
 
         public void enablePerformanceReporting() {
@@ -607,9 +685,10 @@ public class TestRunner {
      * Generic test runner that uses reflection to call solution methods
      * 
      * @param enableProfiling if true, measures execution time and memory usage
+     * @param saveToFile if true, save the results to file
      */
     public static TestResults runTests(String testFile, Object solutionInstance, String methodName,
-            boolean enableProfiling) {
+            boolean enableProfiling, boolean saveToFile) {
         TestResults results = new TestResults();
         if (enableProfiling) {
             results.enablePerformanceReporting();
@@ -636,7 +715,23 @@ public class TestRunner {
             e.printStackTrace();
         }
 
+        if (saveToFile) {
+            results.setTestFilePath(testFile);
+            results.saveToFile();
+        }
+
         return results;
+    }
+
+
+    /**
+     * Generic test runner that uses reflection to call solution methods
+     * 
+     * @param enableProfiling if true, measures execution time and memory usage
+     */
+    public static TestResults runTests(String testFile, Object solutionInstance, String methodName,
+            boolean enableProfiling) {
+        return runTests(testFile, solutionInstance, methodName, enableProfiling, false);
     }
 
     /**
@@ -698,7 +793,9 @@ public class TestRunner {
             actualStr = resultToString(result);
 
             // Compare with expected
-            passed = actualStr.equals(testCase.expected);
+            String normalizedExpected = normalizeOutput(testCase.expected);
+            String normalizedActual = normalizeOutput(actualStr);
+            passed = normalizedExpected.equals(normalizedActual);
 
             System.out.println("Input:    " + testCase.input);
             System.out.println("Expected: " + testCase.expected);
@@ -713,7 +810,7 @@ public class TestRunner {
         }
 
         results.addResult(testCase.name, passed, testCase.input, testCase.expected, actualStr,
-                error, performance);
+                error, testCase.description, performance);
     }
 
     /**
@@ -750,10 +847,25 @@ public class TestRunner {
         throw new RuntimeException("Unsupported parameter types for method: " + method.getName());
     }
 
-    /**
-     * Convert result object to string for comparison Normalizes formatting to match expected output
-     * (no spaces after commas)
-     */
+    private static String normalizeOutput(String output) {
+        // Remove spaces after commas: [1, 2, 3] -> [1,2,3]
+        output = output.replaceAll(", ", ",");
+
+        // Remove extra whitespace around brackets: [ 1,2,3 ] -> [1,2,3]
+        output = output.replaceAll("\\[\\s+", "[");
+        output = output.replaceAll("\\s+\\]", "]");
+
+        // Remove extra whitespace around parentheses: ( 1,2,3 ) -> (1,2,3)
+        output = output.replaceAll("\\(\\s+", "(");
+        output = output.replaceAll("\\s+\\)", ")");
+
+        // Normalize boolean values: True/False -> true/false
+        output = output.replaceAll("\\bTrue\\b", "true");
+        output = output.replaceAll("\\bFalse\\b", "false");
+
+        return output.trim();
+    }
+
     private static String resultToString(Object result) {
         if (result == null) {
             return "null";
@@ -770,8 +882,7 @@ public class TestRunner {
             resultStr = result.toString();
         }
 
-        // Normalize formatting: remove spaces after commas to match expected format
-        return resultStr.replaceAll(", ", ",");
+        return resultStr; // Don't normalize here anymore
     }
 
     /**
