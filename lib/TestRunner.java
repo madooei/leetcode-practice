@@ -336,26 +336,27 @@ public class TestRunner {
     }
 
     /**
-     * Convert result object to string for comparison
+     * Convert result object to string for comparison Normalizes formatting to match expected output
+     * (no spaces after commas)
      */
     private static String resultToString(Object result) {
         if (result == null) {
             return "null";
         }
 
+        String resultStr;
         if (result instanceof List) {
-            return result.toString();
+            resultStr = result.toString();
+        } else if (result instanceof Integer[]) {
+            resultStr = Arrays.toString((Integer[]) result);
+        } else if (result instanceof int[]) {
+            resultStr = Arrays.toString((int[]) result);
+        } else {
+            resultStr = result.toString();
         }
 
-        if (result instanceof Integer[]) {
-            return Arrays.toString((Integer[]) result);
-        }
-
-        if (result instanceof int[]) {
-            return Arrays.toString((int[]) result);
-        }
-
-        return result.toString();
+        // Normalize formatting: remove spaces after commas to match expected format
+        return resultStr.replaceAll(", ", ",");
     }
 
     /**
