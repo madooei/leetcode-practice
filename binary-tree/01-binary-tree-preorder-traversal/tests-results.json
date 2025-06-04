@@ -6,7 +6,7 @@
     "expected": "[1,2,3]",
     "got": "[1,2,3]",
     "status": "✅ PASS",
-    "performance": "Time: 0.012 ms, Memory: 0.00 MB (5 iterations)"
+    "performance": "Time: 0.021 ms, Memory: 0.00 MB (5 iterations)"
   },
   {
     "name": "Example 2",
@@ -15,7 +15,7 @@
     "expected": "[]",
     "got": "[]",
     "status": "✅ PASS",
-    "performance": "Time: 0.009 ms, Memory: 0.05 MB (5 iterations)"
+    "performance": "Time: 0.008 ms, Memory: 0.05 MB (5 iterations)"
   },
   {
     "name": "Example 3",
@@ -24,7 +24,7 @@
     "expected": "[1]",
     "got": "[1]",
     "status": "✅ PASS",
-    "performance": "Time: 0.012 ms, Memory: 0.03 MB (5 iterations)"
+    "performance": "Time: 0.010 ms, Memory: 0.03 MB (5 iterations)"
   },
   {
     "name": "Complete Binary Tree",
@@ -33,7 +33,7 @@
     "expected": "[1,2,4,5,3,6,7]",
     "got": "[1,2,4,5,3,6,7]",
     "status": "✅ PASS",
-    "performance": "Time: 0.015 ms, Memory: 0.02 MB (5 iterations)"
+    "performance": "Time: 0.016 ms, Memory: 0.02 MB (5 iterations)"
   },
   {
     "name": "Left Skewed Tree",
@@ -42,7 +42,7 @@
     "expected": "[1,2,3]",
     "got": "[1,2,3]",
     "status": "✅ PASS",
-    "performance": "Time: 0.014 ms, Memory: 0.01 MB (5 iterations)"
+    "performance": "Time: 0.015 ms, Memory: 0.01 MB (5 iterations)"
   },
   {
     "name": "Right Skewed Tree",
@@ -60,7 +60,7 @@
     "expected": "[3,9,20,15,7]",
     "got": "[3,9,20,15,7]",
     "status": "✅ PASS",
-    "performance": "Time: 0.013 ms, Memory: 0.01 MB (5 iterations)"
+    "performance": "Time: 0.031 ms, Memory: 0.01 MB (5 iterations)"
   },
   {
     "name": "More Complex Tree",
@@ -69,6 +69,6 @@
     "expected": "[1,2,4,5,6,7,3,8,9]",
     "got": "[1,2,4,5,6,7,3,8,9]",
     "status": "✅ PASS",
-    "performance": "Time: 0.018 ms, Memory: 0.00 MB (5 iterations)"
+    "performance": "Time: 0.020 ms, Memory: 0.00 MB (5 iterations)"
   }
 ]

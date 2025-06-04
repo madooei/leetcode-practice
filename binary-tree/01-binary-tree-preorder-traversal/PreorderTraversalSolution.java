@@ -11,24 +11,23 @@ public class PreorderTraversalSolution {
   // Iterative solution
   private List<Integer> preorderTraversalItr(TreeNode root) {
     List<Integer> values = new ArrayList<>();
-    Stack<TreeNode> nodes = new Stack<>();
-
-    TreeNode node = root;
-    while (node != null) {
-      nodes.push(node);
-      values.add(node.val);
-      while (node.left != null) {
-        node = node.left;
-        nodes.push(node);
+    if (root == null) return values;
+    
+    Stack<TreeNode> stack = new Stack<>();
+    stack.push(root);
+    
+    while (!stack.isEmpty()) {
+        TreeNode node = stack.pop();
         values.add(node.val);
-      }
-      while (!nodes.empty()) {
-        node = nodes.pop();
-        node = node.right;
-        if (node != null) {
-          break;
+        
+        // Push right first, then left
+        // This ensures left is processed before right (LIFO)
+        if (node.right != null) {
+            stack.push(node.right);
         }
-      }
+        if (node.left != null) {
+            stack.push(node.left);
+        }
     }
     return values;
   }
