@@ -1,0 +1,18 @@
+# dev
+.vscode/*
+!.vscode/launch.json
+!.vscode/*.code-snippets
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+
+# env
+.env
+.env.production
+
+# misc
+.DS_Store
+
+# Build artifacts
+bin
+*.class

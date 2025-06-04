@@ -1,0 +1,18 @@
+{
+  "java.project.sourcePaths": [
+    "lib",
+    "binary-tree/01-binary-tree-preorder-traversal",
+    "binary-tree/02-binary-tree-inorder-traversal",
+    "binary-tree/03-binary-tree-postorder-traversal",
+    "hello-world"
+  ],
+  "java.project.outputPath": "bin",
+  "java.compile.nullAnalysis.mode": "automatic",
+  "files.exclude": {
+    "**/*.class": true,
+    "bin/": true
+  },
+  "java.format.settings.url": "https://raw.githubusercontent.com/google/styleguide/gh-pages/eclipse-java-google-style.xml",
+  "editor.formatOnSave": true,
+  "cSpell.words": ["leetcode", "Preorder"]
+}
