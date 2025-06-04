@@ -18,9 +18,7 @@ leetcode-practice/
 ├── bin/                    # Compiled Java classes (auto-generated)
 ├── lib/                    # Common utilities (always available)
 │   ├── TestRunner.java     # Test execution framework
-│   ├── TreeNode.java       # Binary tree data structure
-│   ├── jackson-*.jar       # JSON parsing libraries
-│   └── ... (other utility classes)
+│   └── ... (other utility classes that TestRunner uses)
 └── hello-world/            # Template for new problems
     ├── README.md           # Problem statement
     ├── Starter.md          # Original LeetCode template
@@ -198,7 +196,7 @@ public class PreorderTraversalSolution {
     PreorderTraversalSolution solution = new PreorderTraversalSolution();
     String methodName = "preorderTraversal";
     boolean profile = true; // Set to true for performance insights (experimental)
-    TestRunner.TestResults results = TestRunner.runTests(testFile, solution, methodName, profile);
+    TestResultsManager results = TestRunner.runTests(testFile, solution, methodName, profile);
     results.printSummary();
   }
 }
@@ -210,7 +208,7 @@ public class PreorderTraversalSolution {
   - This name must be unique across your problems.
   - Follow the format: `<ProblemName>Solution.java` (e.g., `PreorderTraversalSolution.java`).
 - **Main method**: Add a `main` method to run tests directly.
-- **No imports needed** for `TreeNode` and `TestRunner` - they're available from the `lib` folder
+- **No imports needed** for `TreeNode`, `TestRunner`, and `TestResultsManager` - they're available from the `lib` folder
 - **Use the full path** to your `tests.json` file relative to the project root
 - The `TestRunner` automatically detects your solution method by name
 - Notice the arguments to `runTests`: the path to your test file, the solution instance, the method name to call, and whether to profile performance (experimental feature).
