@@ -289,8 +289,8 @@ public class TestRunner {
         private String escapeJson(String str) {
             if (str == null)
                 return "";
-            return str.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n")
-                    .replace("\r", "\\r").replace("\t", "\\t");
+            return str.replace("\"", "\\\"") // Only escape quotes
+                    .replace("\n", "\\n").replace("\r", "\\r").replace("\t", "\\t");
         }
 
         public void enablePerformanceReporting() {
@@ -838,7 +838,16 @@ public class TestRunner {
             }
 
             if (paramType == String.class) {
-                return new Object[] {input.replace("\"", "")};
+                // Handle null input
+                if (input.equals("null")) {
+                    return new Object[] {null};
+                }
+                // Remove surrounding quotes for string inputs
+                if (input.startsWith("\"") && input.endsWith("\"")) {
+                    return new Object[] {input.substring(1, input.length() - 1)};
+                }
+                // Return as-is if no quotes
+                return new Object[] {input};
             }
 
             // Add more parameter type handling as needed
