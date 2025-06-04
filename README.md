@@ -25,8 +25,8 @@ leetcode-practice/
     ├── README.md           # Problem statement
     ├── Starter.md          # Original LeetCode template
     ├── tests.json          # Test cases
-    ├── Solution.java       # Your implementation
-    ├── board.excalidraw.svg   # Optional Excalidraw whiteboard
+    ├── HelloWorldSolution.java   # Your implementation
+    ├── board.excalidraw.svg      # Optional Excalidraw whiteboard
     └── notes.md            # Your notes and observations
 ```
 
@@ -40,7 +40,7 @@ leetcode-practice/
 
 ### 2. Test Your Setup
 
-Navigate to the `hello-world` folder and open `Main.java`. You should see two options above the `main` method:
+Navigate to the `hello-world` folder and open `HelloWorldSolution.java`. You should see two options above the `main` method:
 
 - **Run** - Execute the program
 - **Debug** - Run with debugging capabilities
@@ -182,32 +182,38 @@ Integer[] array = TreeNode.parseArray("[1,null,2,3]");
 List<Integer> arrayForm = TreeNode.toArray(root);
 ```
 
-#### 3.5 Create `Solution.java` (Your Implementation)
+#### 3.5 Create Solution Java File (Your Implementation)
 
 ```java
 import java.util.*;
 
-public class Solution {
-    public List<Integer> preorderTraversal(TreeNode root) {
-        // TODO: Implement your solution here
-        return null;
-    }
+public class PreorderTraversalSolution {
+  public List<Integer> preorderTraversal(TreeNode root) {
+    // TODO: Implement your solution here
+    return null;
+  }
 
-    public static void main(String[] args) {
-        String testFile = "binary-tree/01-binary-tree-preorder-traversal/tests.json";
-        Solution solution = new Solution();
-        TestRunner.TestResults results = TestRunner.runTests(testFile, solution, "preorderTraversal");
-        results.printSummary();
-    }
+  public static void main(String[] args) {
+    String testFile = "binary-tree/01-binary-tree-preorder-traversal/tests.json";
+    PreorderTraversalSolution solution = new PreorderTraversalSolution();
+    String methodName = "preorderTraversal";
+    boolean profile = true; // Set to true for performance insights (experimental)
+    TestRunner.TestResults results = TestRunner.runTests(testFile, solution, methodName, profile);
+    results.printSummary();
+  }
 }
 ```
 
 **Key Points:**
 
+- **Unique class name**: Use a descriptive name like `PreorderTraversalSolution`.
+  - This name must be unique across your problems.
+  - Follow the format: `<ProblemName>Solution.java` (e.g., `PreorderTraversalSolution.java`).
+- **Main method**: Add a `main` method to run tests directly.
 - **No imports needed** for `TreeNode` and `TestRunner` - they're available from the `lib` folder
 - **Use the full path** to your `tests.json` file relative to the project root
 - The `TestRunner` automatically detects your solution method by name
-- Notice the arguments to `runTests`: the path to your test file, the solution instance, and the method name to call.
+- Notice the arguments to `runTests`: the path to your test file, the solution instance, the method name to call, and whether to profile performance (experimental feature).
 
 ### Step 4: Implement and Test
 
@@ -261,6 +267,10 @@ Create `notes.md` to track your learning:
 - Morris traversal (O(1) space)
 ```
 
+Another way to keep notes is "journaling" where you write down your thoughts, challenges, and insights like a diary (with date stamps). This allows you to track your progress over time and see how your understanding evolves.
+
+You can also include links to the original LeetCode problem, relevant articles, or videos that helped you understand the topic better.
+
 ## 🔧 How It All Works
 
 ### VS Code Integration
@@ -287,6 +297,18 @@ The `TestRunner` class:
 - **Topic-based organization:** Group related problems together
 - **Numbered problems:** Easy to track progress and find specific problems
 - **Complete documentation:** README, tests, notes, and starter code all in one place
+
+### Important: Class Naming Strategy
+
+Since all problem directories are in the Java source path, **class names must be unique** across your entire project. This is why we use descriptive names like `PreorderTraversalSolution` instead of a generic name like `Solution`.
+
+**Naming Convention:**
+
+- `PreorderTraversalSolution.java` for Binary Tree Preorder Traversal
+- `TwoSumSolution.java` for Two Sum problem  
+- `ValidParenthesesSolution.java` for Valid Parentheses
+
+This prevents Java classpath conflicts and makes your code more organized!
 
 ## 🐛 Debugging Guide
 
@@ -323,14 +345,19 @@ The `TestRunner` class:
 
 ### Third-Party Libraries
 
-- **Jackson for JSON parsing:** Automatically converts JSON strings to Java objects
-
-If you need to add more third-party libraries, simply place the JAR files in the `lib/` folder and they will be available to all your problems. For example, the Jackson library (already included for JSON parsing) was added like this:
+If you need to add more third-party libraries, simply place the JAR files in the `lib/` folder and they will be available to all your problems. For example, the current TestRunner uses a built-in simple JSON parser, but if you want to use a more robust library like Jackson, you can add it easily like this:
 
 ```bash
 curl -o lib/jackson-core.jar https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-core/2.15.2/jackson-core-2.15.2.jar
 curl -o lib/jackson-databind.jar https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-databind/2.15.2/jackson-databind-2.15.2.jar
 curl -o lib/jackson-annotations.jar https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-annotations/2.15.2/jackson-annotations-2.15.2.jar
+```
+
+Then import them in your Java files as needed:
+
+```java
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 ```
 
 ## 📈 Workflow Tips
@@ -399,11 +426,12 @@ binary-tree/01-binary-tree-preorder-traversal/
 ├── README.md          # Problem statement from LeetCode
 ├── Starter.md         # Original template code
 ├── tests.json         # Test cases (start with examples, add more)
-├── Solution.java      # Your implementation with main method
-└── notes.md           # Your observations and learnings
+├── PreorderTraversalSolution.java  # Your implementation with main method
+├── board.excalidraw.svg            # Whiteboard for visualizing the problem
+└── notes.md           # Your observations, learnings, resources, etc.
 ```
 
-When you click **Run** on `Solution.java`, you'll see output like:
+When you click **Run** on `PreorderTraversalSolution.java`, you'll see output like:
 
 ```plaintext
 Running 4 test cases...
@@ -426,6 +454,9 @@ Status:   ✅ PASS
 Results: 4/4 tests passed (100.0%)
 🎉 All tests passed!
 ```
+
+> [!NOTE]
+> If performance profiling is enabled, you'll also see execution time and memory usage for each test case.
 
 ## 🚀 Ready to Start!
 
