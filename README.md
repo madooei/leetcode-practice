@@ -21,15 +21,13 @@ leetcode-practice/
 │   ├── TreeNode.java       # Binary tree data structure
 │   ├── jackson-*.jar       # JSON parsing libraries
 │   └── ... (other utility classes)
-├── hello-world/            # Example starter problem
-│   └── Main.java
-└── binary-tree/            # Example organization by topic
-    └── 01-binary-tree-preorder-traversal/
-        ├── README.md       # Problem statement
-        ├── Starter.md      # Original LeetCode template
-        ├── tests.json      # Test cases
-        ├── Solution.java   # Your implementation
-        └── notes.md        # Your notes and observations
+└── hello-world/            # Template for new problems
+    ├── README.md           # Problem statement
+    ├── Starter.md          # Original LeetCode template
+    ├── tests.json          # Test cases
+    ├── Solution.java       # Your implementation
+    ├── board.excalidraw.svg   # Optional Excalidraw whiteboard
+    └── notes.md            # Your notes and observations
 ```
 
 ## 🚀 Getting Started
@@ -78,6 +76,9 @@ cd binary-tree/01-binary-tree-preorder-traversal
 ```
 
 ### Step 3: Create Problem Files
+
+> [!TIP]
+> You can copy the structure from the `hello-world` example, but with problem-specific content.
 
 #### 3.1 Create `README.md` (Problem Statement)
 
@@ -232,6 +233,10 @@ private void preorderHelper(TreeNode root, List<Integer> result) {
 }
 ```
 
+#### Excalidraw Whiteboard (Optional but Helpful)
+
+Create a `board.excalidraw.svg` file in the problem directory. The Excalidraw VS Code extension (suggested in `.vscode/extensions.json` and also available in the marketplace as [`pomdtr.excalidraw-editor`](https://marketplace.visualstudio.com/items?itemName=pomdtr.excalidraw-editor)) allows you to create diagrams directly in your project. This can be useful for visualizing tree structures, algorithm flow, etc.
+
 ### Step 5: Keep Notes (Optional but Recommended)
 
 Create `notes.md` to track your learning:
@@ -313,6 +318,8 @@ The `TestRunner` class:
 - **Multiple input types:** TreeNode, integers, strings, arrays
 - **Detailed output:** Shows input, expected, actual, and pass/fail status
 - **Error handling:** Catches exceptions and shows helpful messages
+- **Performance profiling:** Measures execution time and memory usage (experimental)
+- **Performance insights:** Provides performance metrics for each test case and overall summary (experimental)
 
 ### Third-Party Libraries
 
