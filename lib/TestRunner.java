@@ -145,25 +145,88 @@ public class TestRunner {
     }
 
     /**
-     * Test results tracking
+     * Performance profiling results
+     */
+    public static class PerformanceResult {
+        public long executionTimeNanos;
+        public long memoryUsedBytes;
+        public int iterations;
+
+        public PerformanceResult(long executionTimeNanos, long memoryUsedBytes, int iterations) {
+            this.executionTimeNanos = executionTimeNanos;
+            this.memoryUsedBytes = memoryUsedBytes;
+            this.iterations = iterations;
+        }
+
+        public double getExecutionTimeMs() {
+            return executionTimeNanos / 1_000_000.0;
+        }
+
+        public double getMemoryUsedMB() {
+            return memoryUsedBytes / (1024.0 * 1024.0);
+        }
+
+        @Override
+        public String toString() {
+            return String.format("Time: %.3f ms, Memory: %.2f MB (%d iterations)",
+                    getExecutionTimeMs(), getMemoryUsedMB(), iterations);
+        }
+    }
+
+    /**
+     * Enhanced test result with performance data
+     */
+    public static class TestResult {
+        public String testName;
+        public boolean passed;
+        public String input;
+        public String expected;
+        public String actual;
+        public String error;
+        public PerformanceResult performance;
+
+        public TestResult(String testName, boolean passed, String input, String expected,
+                String actual, String error, PerformanceResult performance) {
+            this.testName = testName;
+            this.passed = passed;
+            this.input = input;
+            this.expected = expected;
+            this.actual = actual;
+            this.error = error;
+            this.performance = performance;
+        }
+    }
+
+    /**
+     * Test results tracking with performance stats
      */
     public static class TestResults {
         public List<TestResult> results = new ArrayList<>();
         public int passed = 0;
         public int total = 0;
+        public boolean showPerformance = false;
 
         public void addResult(String testName, boolean passed, String input, String expected,
-                String actual, String error) {
-            results.add(new TestResult(testName, passed, input, expected, actual, error));
+                String actual, String error, PerformanceResult performance) {
+            results.add(
+                    new TestResult(testName, passed, input, expected, actual, error, performance));
             this.total++;
             if (passed)
                 this.passed++;
+        }
+
+        public void enablePerformanceReporting() {
+            this.showPerformance = true;
         }
 
         public void printSummary() {
             System.out.println("=" + "=".repeat(60));
             System.out.println(String.format("Results: %d/%d tests passed (%.1f%%)", passed, total,
                     total > 0 ? (passed * 100.0 / total) : 0));
+
+            if (showPerformance && !results.isEmpty()) {
+                printPerformanceSummary();
+            }
 
             if (passed == total) {
                 System.out.println("🎉 All tests passed!");
@@ -178,24 +241,109 @@ public class TestRunner {
                 }
             }
         }
+
+        private void printPerformanceSummary() {
+            System.out.println("\n📊 Performance Summary:");
+
+            // Calculate statistics
+            double totalTime = 0;
+            double maxTime = 0;
+            double minTime = Double.MAX_VALUE;
+            long totalMemory = 0;
+            long maxMemory = 0;
+            int validResults = 0;
+
+            for (TestResult result : results) {
+                if (result.passed && result.performance != null) {
+                    double timeMs = result.performance.getExecutionTimeMs();
+                    long memoryBytes = result.performance.memoryUsedBytes;
+
+                    totalTime += timeMs;
+                    maxTime = Math.max(maxTime, timeMs);
+                    minTime = Math.min(minTime, timeMs);
+                    totalMemory += memoryBytes;
+                    maxMemory = Math.max(maxMemory, memoryBytes);
+                    validResults++;
+                }
+            }
+
+            if (validResults > 0) {
+                double avgTime = totalTime / validResults;
+                double avgMemoryMB = (totalMemory / validResults) / (1024.0 * 1024.0);
+                double maxMemoryMB = maxMemory / (1024.0 * 1024.0);
+
+                System.out.println(String.format("  Average Time: %.3f ms", avgTime));
+                System.out.println(
+                        String.format("  Time Range: %.3f ms - %.3f ms", minTime, maxTime));
+                System.out.println(String.format("  Average Memory: %.2f MB", avgMemoryMB));
+                System.out.println(String.format("  Peak Memory: %.2f MB", maxMemoryMB));
+
+                // Simple complexity hint based on performance scaling
+                if (results.size() >= 3) {
+                    analyzeComplexity();
+                }
+            }
+        }
+
+        private void analyzeComplexity() {
+            // Very basic complexity analysis based on execution time trends
+            List<TestResult> passedResults =
+                    results.stream().filter(r -> r.passed && r.performance != null)
+                            .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+
+            if (passedResults.size() >= 3) {
+                // Sort by input size (very rough estimation)
+                passedResults.sort((a, b) -> a.input.length() - b.input.length());
+
+                double firstTime = passedResults.get(0).performance.getExecutionTimeMs();
+                double lastTime = passedResults.get(passedResults.size() - 1).performance
+                        .getExecutionTimeMs();
+
+                if (lastTime > firstTime * 2) {
+                    System.out.println(
+                            "  💡 Performance scales with input size - consider optimizing for larger inputs");
+                } else {
+                    System.out.println("  ✅ Performance appears consistent across test cases");
+                }
+            }
+        }
     }
 
-    public static class TestResult {
-        public String testName;
-        public boolean passed;
-        public String input;
-        public String expected;
-        public String actual;
-        public String error;
+    /**
+     * Measure performance of a method execution
+     */
+    public static PerformanceResult measurePerformance(Object instance, Method method,
+            Object[] args, int warmupRuns, int measureRuns) {
+        Runtime runtime = Runtime.getRuntime();
 
-        public TestResult(String testName, boolean passed, String input, String expected,
-                String actual, String error) {
-            this.testName = testName;
-            this.passed = passed;
-            this.input = input;
-            this.expected = expected;
-            this.actual = actual;
-            this.error = error;
+        try {
+            // Warmup runs to let JIT optimize
+            for (int i = 0; i < warmupRuns; i++) {
+                method.invoke(instance, args);
+            }
+
+            // Force garbage collection before measurement
+            System.gc();
+            Thread.sleep(10); // Give GC a moment
+
+            long startMemory = runtime.totalMemory() - runtime.freeMemory();
+            long startTime = System.nanoTime();
+
+            // Measured runs
+            for (int i = 0; i < measureRuns; i++) {
+                method.invoke(instance, args);
+            }
+
+            long endTime = System.nanoTime();
+            long endMemory = runtime.totalMemory() - runtime.freeMemory();
+
+            long executionTime = (endTime - startTime) / measureRuns;
+            long memoryUsed = Math.max(0, endMemory - startMemory);
+
+            return new PerformanceResult(executionTime, memoryUsed, measureRuns);
+
+        } catch (Exception e) {
+            return new PerformanceResult(0, 0, 0);
         }
     }
 
@@ -216,14 +364,20 @@ public class TestRunner {
 
     /**
      * Generic test runner that uses reflection to call solution methods
+     * 
+     * @param enableProfiling if true, measures execution time and memory usage
      */
-    public static TestResults runTests(String testFile, Object solutionInstance,
-            String methodName) {
+    public static TestResults runTests(String testFile, Object solutionInstance, String methodName,
+            boolean enableProfiling) {
         TestResults results = new TestResults();
+        if (enableProfiling) {
+            results.enablePerformanceReporting();
+        }
 
         try {
             List<TestCase> testCases = loadTestCases(testFile);
-            System.out.println("Running " + testCases.size() + " test cases...");
+            System.out.println("Running " + testCases.size() + " test cases"
+                    + (enableProfiling ? " with performance profiling..." : "..."));
             System.out.println("=" + "=".repeat(60));
 
             // Get the solution method using reflection
@@ -231,7 +385,8 @@ public class TestRunner {
 
             for (int i = 0; i < testCases.size(); i++) {
                 TestCase testCase = testCases.get(i);
-                runSingleTest(testCase, solutionInstance, solutionMethod, results, i + 1);
+                runSingleTest(testCase, solutionInstance, solutionMethod, results, i + 1,
+                        enableProfiling);
                 System.out.println();
             }
 
@@ -241,6 +396,14 @@ public class TestRunner {
         }
 
         return results;
+    }
+
+    /**
+     * Generic test runner (backward compatibility)
+     */
+    public static TestResults runTests(String testFile, Object solutionInstance,
+            String methodName) {
+        return runTests(testFile, solutionInstance, methodName, false);
     }
 
     /**
@@ -259,13 +422,14 @@ public class TestRunner {
     }
 
     /**
-     * Run a single test case
+     * Run a single test case with optional profiling
      */
     private static void runSingleTest(TestCase testCase, Object solutionInstance,
-            Method solutionMethod, TestResults results, int testNum) {
+            Method solutionMethod, TestResults results, int testNum, boolean enableProfiling) {
         String error = null;
         String actualStr = "";
         boolean passed = false;
+        PerformanceResult performance = null;
 
         try {
             System.out.println("Test " + testNum + ": " + testCase.name);
@@ -276,8 +440,18 @@ public class TestRunner {
             // Parse input based on method parameter types
             Object[] args = parseMethodArguments(solutionMethod, testCase.input);
 
-            // Execute the solution method
-            Object result = solutionMethod.invoke(solutionInstance, args);
+            Object result;
+            if (enableProfiling) {
+                // Measure performance
+                long startTime = System.nanoTime();
+                performance = measurePerformance(solutionInstance, solutionMethod, args, 3, 5);
+                result = solutionMethod.invoke(solutionInstance, args); // Final execution for
+                                                                        // correctness
+                System.out.println("Performance: " + performance);
+            } else {
+                // Regular execution
+                result = solutionMethod.invoke(solutionInstance, args);
+            }
 
             // Convert result to string for comparison
             actualStr = resultToString(result);
@@ -298,7 +472,7 @@ public class TestRunner {
         }
 
         results.addResult(testCase.name, passed, testCase.input, testCase.expected, actualStr,
-                error);
+                error, performance);
     }
 
     /**
