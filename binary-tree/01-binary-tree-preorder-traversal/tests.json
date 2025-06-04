@@ -6,7 +6,7 @@
     "description": "Right-skewed tree with left child"
   },
   {
-    "name": "Example 2", 
+    "name": "Example 2",
     "input": "[]",
     "expected": "[]",
     "description": "Empty tree"
@@ -30,7 +30,7 @@
     "description": "Left-skewed tree"
   },
   {
-    "name": "Right Skewed Tree", 
+    "name": "Right Skewed Tree",
     "input": "[1,null,2,null,3]",
     "expected": "[1,2,3]",
     "description": "Right-skewed tree"
@@ -39,6 +39,12 @@
     "name": "Complex Tree",
     "input": "[3,9,20,null,null,15,7]",
     "expected": "[3,9,20,15,7]",
+    "description": "Tree with missing nodes"
+  },
+  {
+    "name": "More Complex Tree",
+    "input": "[1,2,3,4,5,null,8,null,null,6,7,9]",
+    "expected": "[1,2,4,5,6,7,3,8,9]",
     "description": "Tree with missing nodes"
   }
 ]
