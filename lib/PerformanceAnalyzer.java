@@ -127,11 +127,12 @@ public class PerformanceAnalyzer {
      * Analyzes algorithmic complexity based on performance results
      * 
      * This method examines the relationship between input sizes and execution times
-     * to determine the most likely algorithmic complexity. It tests for common
-     * patterns including constant, logarithmic, linear, linearithmic, and quadratic.
+     * to provide insights about performance characteristics. It focuses on providing
+     * useful information about performance patterns rather than trying to guess
+     * exact complexity classes.
      * 
      * @param results List of test results with performance data
-     * @return ComplexityAnalysis containing the detected pattern and recommendations
+     * @return ComplexityAnalysis containing performance insights
      */
     public static ComplexityAnalysis analyzeComplexity(List<TestDataModels.TestResult> results) {
         // Filter to only passed results with performance data
@@ -144,7 +145,7 @@ public class PerformanceAnalyzer {
 
         if (validResults.size() < 3) {
             return new ComplexityAnalysis("Insufficient data", 0.0,
-                    "Need at least 3 successful test cases for complexity analysis");
+                    "Need at least 3 successful test cases for performance analysis");
         }
 
         // Convert results to data points for analysis
@@ -152,14 +153,14 @@ public class PerformanceAnalyzer {
 
         if (dataPoints.size() < 3) {
             return new ComplexityAnalysis("Unable to estimate input sizes", 0.0,
-                    "Cannot determine input sizes for complexity analysis");
+                    "Cannot determine input sizes for performance analysis");
         }
 
         // Sort data points by input size for analysis
         dataPoints.sort((a, b) -> Integer.compare(a.inputSize, b.inputSize));
 
-        // Analyze different complexity patterns
-        return detectComplexityPattern(dataPoints);
+        // Analyze performance characteristics
+        return analyzePerformanceCharacteristics(dataPoints);
     }
 
     /**
@@ -232,175 +233,72 @@ public class PerformanceAnalyzer {
     }
 
     /**
-     * Detects the most likely complexity pattern from data points
+     * Analyzes performance characteristics from data points
+     * 
+     * This method provides insights about performance patterns without making
+     * strong claims about exact complexity classes. It focuses on observable
+     * characteristics and provides practical recommendations.
      * 
      * @param dataPoints List of input size and timing measurements
-     * @return ComplexityAnalysis with the best-fit complexity pattern
+     * @return ComplexityAnalysis with performance insights
      */
-    private static ComplexityAnalysis detectComplexityPattern(List<DataPoint> dataPoints) {
-        if (dataPoints.size() < 3) {
-            return new ComplexityAnalysis("Insufficient data", 0.0, "");
-        }
-
-        // Analyze different complexity hypotheses
-        double constantScore = analyzeConstantComplexity(dataPoints);
-        double linearScore = analyzeLinearComplexity(dataPoints);
-        double quadraticScore = analyzeQuadraticComplexity(dataPoints);
-        double logarithmicScore = analyzeLogarithmicComplexity(dataPoints);
-        double nlogNScore = analyzeNLogNComplexity(dataPoints);
-
-        // Find the best-fitting pattern
-        double maxScore = Math.max(constantScore, Math.max(linearScore,
-                Math.max(quadraticScore, Math.max(logarithmicScore, nlogNScore))));
-
-        if (maxScore < 0.3) {
-            return new ComplexityAnalysis("Complex or irregular pattern", maxScore,
-                    "Performance doesn't follow standard complexity patterns");
-        }
-
-        // Generate analysis result based on best score
-        return generateComplexityResult(maxScore, constantScore, logarithmicScore, linearScore,
-                nlogNScore);
-    }
-
-    /**
-     * Generates the final complexity analysis result
-     */
-    private static ComplexityAnalysis generateComplexityResult(double maxScore,
-            double constantScore, double logarithmicScore, double linearScore, double nlogNScore) {
-
-        String complexity;
-        String recommendation = "";
-
-        if (maxScore == constantScore) {
-            complexity = "O(1) - Constant time";
-            recommendation = "Excellent! Performance doesn't depend on input size";
-        } else if (maxScore == logarithmicScore) {
-            complexity = "O(log n) - Logarithmic time";
-            recommendation = "Very good! Performance scales logarithmically";
-        } else if (maxScore == linearScore) {
-            complexity = "O(n) - Linear time";
-            recommendation = "Good! Performance scales linearly with input size";
-        } else if (maxScore == nlogNScore) {
-            complexity = "O(n log n) - Linearithmic time";
-            recommendation = "Acceptable for divide-and-conquer algorithms";
-        } else {
-            complexity = "O(n²) or higher - Quadratic/Polynomial time";
-            recommendation = "Consider optimizing for better performance with large inputs";
-        }
-
-        return new ComplexityAnalysis(complexity, maxScore, recommendation);
-    }
-
-    /**
-     * Analyzes constant time complexity pattern
-     * Returns score based on how consistent execution times are regardless of input size
-     */
-    private static double analyzeConstantComplexity(List<DataPoint> dataPoints) {
+    private static ComplexityAnalysis analyzePerformanceCharacteristics(List<DataPoint> dataPoints) {
+        // Calculate basic statistics
         double[] times = dataPoints.stream().mapToDouble(dp -> dp.timeMs).toArray();
-        double mean = calculateMean(times);
-        double stdDev = calculateStandardDeviation(times);
+        double meanTime = calculateMean(times);
+        double stdDevTime = calculateStandardDeviation(times);
+        double timeVariation = meanTime > 0 ? stdDevTime / meanTime : 0;
 
-        // Higher score when standard deviation is low relative to mean
-        if (mean == 0)
-            return 0.0;
-        return Math.max(0, 1.0 - (stdDev / mean));
-    }
-
-    /**
-     * Analyzes linear time complexity pattern
-     * Returns score based on how consistent the time/size ratio is
-     */
-    private static double analyzeLinearComplexity(List<DataPoint> dataPoints) {
-        List<Double> ratios = new ArrayList<>();
-        for (DataPoint dp : dataPoints) {
-            if (dp.inputSize > 0) {
-                ratios.add(dp.timeMs / dp.inputSize);
+        // Calculate time ratios between consecutive sizes
+        List<Double> timeRatios = new ArrayList<>();
+        for (int i = 1; i < dataPoints.size(); i++) {
+            DataPoint prev = dataPoints.get(i - 1);
+            DataPoint curr = dataPoints.get(i);
+            if (prev.timeMs > 0) {
+                timeRatios.add(curr.timeMs / prev.timeMs);
             }
         }
 
-        if (ratios.isEmpty())
-            return 0.0;
+        // Calculate average time ratio
+        double avgTimeRatio = timeRatios.isEmpty() ? 1.0 : calculateMean(
+                timeRatios.stream().mapToDouble(Double::doubleValue).toArray());
 
-        double[] ratioArray = ratios.stream().mapToDouble(Double::doubleValue).toArray();
-        double mean = calculateMean(ratioArray);
-        double stdDev = calculateStandardDeviation(ratioArray);
+        // Generate insights based on observed patterns
+        String description;
+        String recommendation;
+        double confidence;
 
-        if (mean == 0)
-            return 0.0;
-        return Math.max(0, 1.0 - (stdDev / mean));
-    }
-
-    /**
-     * Analyzes quadratic time complexity pattern
-     * Returns score based on how consistent the time/(size²) ratio is
-     */
-    private static double analyzeQuadraticComplexity(List<DataPoint> dataPoints) {
-        List<Double> ratios = new ArrayList<>();
-        for (DataPoint dp : dataPoints) {
-            if (dp.inputSize > 1) {
-                ratios.add(dp.timeMs / (dp.inputSize * dp.inputSize));
-            }
+        if (timeVariation < 0.1) {
+            // Very consistent execution times
+            description = "Consistent execution time across inputs";
+            recommendation = "Performance appears stable across different input sizes";
+            confidence = 0.9;
+        } else if (avgTimeRatio < 1.2) {
+            // Small increase in time with input size
+            description = "Performance scales well with input size";
+            recommendation = "Current implementation handles input growth efficiently";
+            confidence = 0.7;
+        } else if (avgTimeRatio < 2.0) {
+            // Moderate increase in time with input size
+            description = "Performance shows moderate scaling with input size";
+            recommendation = "Consider optimizing for larger inputs if needed";
+            confidence = 0.6;
+        } else {
+            // Significant increase in time with input size
+            description = "Performance degrades noticeably with larger inputs";
+            recommendation = "Consider optimizing the algorithm for better scaling";
+            confidence = 0.8;
         }
 
-        if (ratios.isEmpty())
-            return 0.0;
-
-        double[] ratioArray = ratios.stream().mapToDouble(Double::doubleValue).toArray();
-        double mean = calculateMean(ratioArray);
-        double stdDev = calculateStandardDeviation(ratioArray);
-
-        if (mean == 0)
-            return 0.0;
-        return Math.max(0, 1.0 - (stdDev / mean));
-    }
-
-    /**
-     * Analyzes logarithmic time complexity pattern
-     * Returns score based on how consistent the time/log(size) ratio is
-     */
-    private static double analyzeLogarithmicComplexity(List<DataPoint> dataPoints) {
-        List<Double> ratios = new ArrayList<>();
-        for (DataPoint dp : dataPoints) {
-            if (dp.inputSize > 1) {
-                ratios.add(dp.timeMs / Math.log(dp.inputSize));
-            }
+        // Add note about input size limitations
+        int maxInputSize = dataPoints.stream().mapToInt(dp -> dp.inputSize).max().orElse(0);
+        if (maxInputSize < 100) {
+            description += " (based on small input sizes)";
+            recommendation += " - Test with larger inputs for more accurate analysis";
+            confidence *= 0.8; // Reduce confidence for small input sizes
         }
 
-        if (ratios.isEmpty())
-            return 0.0;
-
-        double[] ratioArray = ratios.stream().mapToDouble(Double::doubleValue).toArray();
-        double mean = calculateMean(ratioArray);
-        double stdDev = calculateStandardDeviation(ratioArray);
-
-        if (mean == 0)
-            return 0.0;
-        return Math.max(0, 1.0 - (stdDev / mean));
-    }
-
-    /**
-     * Analyzes n log n time complexity pattern
-     * Returns score based on how consistent the time/(size*log(size)) ratio is
-     */
-    private static double analyzeNLogNComplexity(List<DataPoint> dataPoints) {
-        List<Double> ratios = new ArrayList<>();
-        for (DataPoint dp : dataPoints) {
-            if (dp.inputSize > 1) {
-                ratios.add(dp.timeMs / (dp.inputSize * Math.log(dp.inputSize)));
-            }
-        }
-
-        if (ratios.isEmpty())
-            return 0.0;
-
-        double[] ratioArray = ratios.stream().mapToDouble(Double::doubleValue).toArray();
-        double mean = calculateMean(ratioArray);
-        double stdDev = calculateStandardDeviation(ratioArray);
-
-        if (mean == 0)
-            return 0.0;
-        return Math.max(0, 1.0 - (stdDev / mean));
+        return new ComplexityAnalysis(description, confidence, recommendation);
     }
 
     /**
