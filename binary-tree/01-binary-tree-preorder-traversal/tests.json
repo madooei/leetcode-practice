@@ -1,0 +1,44 @@
+[
+  {
+    "name": "Example 1",
+    "input": "[1,null,2,3]",
+    "expected": "[1,2,3]",
+    "description": "Right-skewed tree with left child"
+  },
+  {
+    "name": "Example 2", 
+    "input": "[]",
+    "expected": "[]",
+    "description": "Empty tree"
+  },
+  {
+    "name": "Example 3",
+    "input": "[1]",
+    "expected": "[1]",
+    "description": "Single node tree"
+  },
+  {
+    "name": "Complete Binary Tree",
+    "input": "[1,2,3,4,5,6,7]",
+    "expected": "[1,2,4,5,3,6,7]",
+    "description": "Complete binary tree - preorder should be root, left subtree, right subtree"
+  },
+  {
+    "name": "Left Skewed Tree",
+    "input": "[1,2,null,3,null,null,null]",
+    "expected": "[1,2,3]",
+    "description": "Left-skewed tree"
+  },
+  {
+    "name": "Right Skewed Tree", 
+    "input": "[1,null,2,null,3]",
+    "expected": "[1,2,3]",
+    "description": "Right-skewed tree"
+  },
+  {
+    "name": "Complex Tree",
+    "input": "[3,9,20,null,null,15,7]",
+    "expected": "[3,9,20,15,7]",
+    "description": "Tree with missing nodes"
+  }
+]
