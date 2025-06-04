@@ -1,8 +1,38 @@
 [
   {
-    "name": "Example 1",
-    "input": "",
-    "expected": "Hello word!",
-    "description": "Hello word!"
+    "name": "Default greeting",
+    "input": "\"\"",
+    "expected": "Hello, World!",
+    "description": "Empty input should return default greeting"
+  },
+  {
+    "name": "Personal greeting",
+    "input": "\"Alice\"",
+    "expected": "Hello, Alice!",
+    "description": "Should greet person by name"
+  },
+  {
+    "name": "Null input",
+    "input": "null",
+    "expected": "Hello, World!",
+    "description": "Null input should return default greeting"
+  },
+  {
+    "name": "Whitespace only",
+    "input": "\"   \"",
+    "expected": "Hello, World!",
+    "description": "Whitespace-only input should return default greeting"
+  },
+  {
+    "name": "Full name",
+    "input": "\"Bob Smith\"",
+    "expected": "Hello, Bob Smith!",
+    "description": "Names with spaces should work correctly"
+  },
+  {
+    "name": "Special characters",
+    "input": "\"José\"",
+    "expected": "Hello, José!",
+    "description": "Names with special characters should work"
   }
 ]
