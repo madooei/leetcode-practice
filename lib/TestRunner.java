@@ -286,26 +286,267 @@ public class TestRunner {
         }
 
         private void analyzeComplexity() {
-            // Very basic complexity analysis based on execution time trends
+            // Enhanced complexity analysis based on execution time scaling
             List<TestResult> passedResults =
                     results.stream().filter(r -> r.passed && r.performance != null)
                             .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
 
-            if (passedResults.size() >= 3) {
-                // Sort by input size (very rough estimation)
-                passedResults.sort((a, b) -> a.input.length() - b.input.length());
+            if (passedResults.size() < 3) {
+                System.out.println("  💡 Need more test cases for complexity analysis");
+                return;
+            }
 
-                double firstTime = passedResults.get(0).performance.getExecutionTimeMs();
-                double lastTime = passedResults.get(passedResults.size() - 1).performance
-                        .getExecutionTimeMs();
-
-                if (lastTime > firstTime * 2) {
-                    System.out.println(
-                            "  💡 Performance scales with input size - consider optimizing for larger inputs");
-                } else {
-                    System.out.println("  ✅ Performance appears consistent across test cases");
+            // Estimate input sizes and sort by them
+            List<DataPoint> dataPoints = new ArrayList<>();
+            for (TestResult result : passedResults) {
+                int inputSize = estimateInputSize(result.input);
+                double timeMs = result.performance.getExecutionTimeMs();
+                if (inputSize > 0 && timeMs > 0) {
+                    dataPoints.add(new DataPoint(inputSize, timeMs));
                 }
             }
+
+            if (dataPoints.size() < 3) {
+                System.out.println("  💡 Unable to estimate input sizes for complexity analysis");
+                return;
+            }
+
+            dataPoints.sort((a, b) -> Integer.compare(a.inputSize, b.inputSize));
+
+            // Analyze different complexity patterns
+            ComplexityAnalysis analysis = analyzeComplexityPattern(dataPoints);
+            System.out.println("  🔍 Complexity Analysis: " + analysis.description);
+
+            if (analysis.confidence > 0.7) {
+                System.out.println(
+                        "    Confidence: " + String.format("%.1f%%", analysis.confidence * 100));
+                if (!analysis.recommendation.isEmpty()) {
+                    System.out.println("    💡 " + analysis.recommendation);
+                }
+            } else {
+                System.out.println(
+                        "    ⚠️  Low confidence - results may be affected by JVM warmup or small input sizes");
+            }
+        }
+
+        private static class DataPoint {
+            int inputSize;
+            double timeMs;
+
+            DataPoint(int inputSize, double timeMs) {
+                this.inputSize = inputSize;
+                this.timeMs = timeMs;
+            }
+        }
+
+        private static class ComplexityAnalysis {
+            String description;
+            double confidence;
+            String recommendation;
+
+            ComplexityAnalysis(String description, double confidence, String recommendation) {
+                this.description = description;
+                this.confidence = confidence;
+                this.recommendation = recommendation;
+            }
+        }
+
+        private int estimateInputSize(String input) {
+            // Estimate input size based on the input format
+            if (input.equals("[]")) {
+                return 0;
+            }
+
+            // For tree inputs like "[1,2,3,4,5,6,7]"
+            if (input.startsWith("[") && input.endsWith("]")) {
+                String content = input.substring(1, input.length() - 1).trim();
+                if (content.isEmpty()) {
+                    return 0;
+                }
+
+                // Count non-null elements
+                String[] elements = content.split(",");
+                int count = 0;
+                for (String element : elements) {
+                    if (!element.trim().equals("null")) {
+                        count++;
+                    }
+                }
+                return count;
+            }
+
+            // For string inputs, use length
+            if (input.startsWith("\"") && input.endsWith("\"")) {
+                return input.length() - 2;
+            }
+
+            // For numeric inputs, assume size 1
+            try {
+                Integer.parseInt(input.trim());
+                return 1;
+            } catch (NumberFormatException e) {
+                // Fall back to string length as rough estimate
+                return input.length();
+            }
+        }
+
+        private ComplexityAnalysis analyzeComplexityPattern(List<DataPoint> dataPoints) {
+            if (dataPoints.size() < 3) {
+                return new ComplexityAnalysis("Insufficient data", 0.0, "");
+            }
+
+            int n = dataPoints.size();
+
+            // Calculate growth ratios
+            List<Double> growthRatios = new ArrayList<>();
+            for (int i = 1; i < n; i++) {
+                DataPoint prev = dataPoints.get(i - 1);
+                DataPoint curr = dataPoints.get(i);
+
+                if (prev.timeMs > 0 && curr.inputSize > prev.inputSize) {
+                    double sizeRatio = (double) curr.inputSize / prev.inputSize;
+                    double timeRatio = curr.timeMs / prev.timeMs;
+
+                    if (sizeRatio > 1.1) { // Only consider meaningful size increases
+                        growthRatios.add(timeRatio / sizeRatio);
+                    }
+                }
+            }
+
+            if (growthRatios.isEmpty()) {
+                return new ComplexityAnalysis("Unable to determine pattern", 0.0,
+                        "Input sizes too similar or execution times too variable");
+            }
+
+            // Analyze different complexity hypotheses
+            double constantScore = analyzeConstantComplexity(dataPoints);
+            double linearScore = analyzeLinearComplexity(dataPoints);
+            double quadraticScore = analyzeQuadraticComplexity(dataPoints);
+            double logarithmicScore = analyzeLogarithmicComplexity(dataPoints);
+            double nlogNScore = analyzeNLogNComplexity(dataPoints);
+
+            // Find the best fit
+            double maxScore = Math.max(constantScore, Math.max(linearScore,
+                    Math.max(quadraticScore, Math.max(logarithmicScore, nlogNScore))));
+
+            if (maxScore < 0.3) {
+                return new ComplexityAnalysis("Complex or irregular pattern", maxScore,
+                        "Performance doesn't follow standard complexity patterns");
+            }
+
+            String complexity;
+            String recommendation = "";
+
+            if (maxScore == constantScore) {
+                complexity = "O(1) - Constant time";
+                recommendation = "Excellent! Performance doesn't depend on input size";
+            } else if (maxScore == logarithmicScore) {
+                complexity = "O(log n) - Logarithmic time";
+                recommendation = "Very good! Performance scales logarithmically";
+            } else if (maxScore == linearScore) {
+                complexity = "O(n) - Linear time";
+                recommendation = "Good! Performance scales linearly with input size";
+            } else if (maxScore == nlogNScore) {
+                complexity = "O(n log n) - Linearithmic time";
+                recommendation = "Acceptable for divide-and-conquer algorithms";
+            } else {
+                complexity = "O(n²) or higher - Quadratic/Polynomial time";
+                recommendation = "Consider optimizing for better performance with large inputs";
+            }
+
+            return new ComplexityAnalysis(complexity, maxScore, recommendation);
+        }
+
+        private double analyzeConstantComplexity(List<DataPoint> dataPoints) {
+            // Check if execution time is roughly constant regardless of input size
+            double[] times = dataPoints.stream().mapToDouble(dp -> dp.timeMs).toArray();
+            return 1.0 - (standardDeviation(times) / mean(times));
+        }
+
+        private double analyzeLinearComplexity(List<DataPoint> dataPoints) {
+            // Check if time/size ratio is roughly constant
+            List<Double> ratios = new ArrayList<>();
+            for (DataPoint dp : dataPoints) {
+                if (dp.inputSize > 0) {
+                    ratios.add(dp.timeMs / dp.inputSize);
+                }
+            }
+
+            if (ratios.isEmpty())
+                return 0.0;
+
+            double[] ratioArray = ratios.stream().mapToDouble(Double::doubleValue).toArray();
+            double cv = standardDeviation(ratioArray) / mean(ratioArray);
+            return Math.max(0, 1.0 - cv);
+        }
+
+        private double analyzeQuadraticComplexity(List<DataPoint> dataPoints) {
+            // Check if time/(size²) ratio is roughly constant
+            List<Double> ratios = new ArrayList<>();
+            for (DataPoint dp : dataPoints) {
+                if (dp.inputSize > 1) {
+                    ratios.add(dp.timeMs / (dp.inputSize * dp.inputSize));
+                }
+            }
+
+            if (ratios.isEmpty())
+                return 0.0;
+
+            double[] ratioArray = ratios.stream().mapToDouble(Double::doubleValue).toArray();
+            double cv = standardDeviation(ratioArray) / mean(ratioArray);
+            return Math.max(0, 1.0 - cv);
+        }
+
+        private double analyzeLogarithmicComplexity(List<DataPoint> dataPoints) {
+            // Check if time/log(size) ratio is roughly constant
+            List<Double> ratios = new ArrayList<>();
+            for (DataPoint dp : dataPoints) {
+                if (dp.inputSize > 1) {
+                    ratios.add(dp.timeMs / Math.log(dp.inputSize));
+                }
+            }
+
+            if (ratios.isEmpty())
+                return 0.0;
+
+            double[] ratioArray = ratios.stream().mapToDouble(Double::doubleValue).toArray();
+            double cv = standardDeviation(ratioArray) / mean(ratioArray);
+            return Math.max(0, 1.0 - cv);
+        }
+
+        private double analyzeNLogNComplexity(List<DataPoint> dataPoints) {
+            // Check if time/(size*log(size)) ratio is roughly constant
+            List<Double> ratios = new ArrayList<>();
+            for (DataPoint dp : dataPoints) {
+                if (dp.inputSize > 1) {
+                    ratios.add(dp.timeMs / (dp.inputSize * Math.log(dp.inputSize)));
+                }
+            }
+
+            if (ratios.isEmpty())
+                return 0.0;
+
+            double[] ratioArray = ratios.stream().mapToDouble(Double::doubleValue).toArray();
+            double cv = standardDeviation(ratioArray) / mean(ratioArray);
+            return Math.max(0, 1.0 - cv);
+        }
+
+        private double mean(double[] values) {
+            double sum = 0;
+            for (double value : values) {
+                sum += value;
+            }
+            return sum / values.length;
+        }
+
+        private double standardDeviation(double[] values) {
+            double mean = mean(values);
+            double sumSquaredDiffs = 0;
+            for (double value : values) {
+                double diff = value - mean;
+                sumSquaredDiffs += diff * diff;
+            }
+            return Math.sqrt(sumSquaredDiffs / values.length);
         }
     }
 
