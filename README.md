@@ -306,7 +306,7 @@ Since all problem directories are in the Java source path, **class names must be
 **Naming Convention:**
 
 - `PreorderTraversalSolution.java` for Binary Tree Preorder Traversal
-- `TwoSumSolution.java` for Two Sum problem  
+- `TwoSumSolution.java` for Two Sum problem
 - `ValidParenthesesSolution.java` for Valid Parentheses
 
 This prevents Java classpath conflicts and makes your code more organized!
@@ -332,6 +332,59 @@ This prevents Java classpath conflicts and makes your code more organized!
 - **Hover over variables** to see their current values
 - **Use the Variables panel** to see all local variables
 - **Add expressions to Watch** to monitor specific values
+
+### Debugging Tips
+
+You can make a copy of `tests.json` (e.g., `tests-debug.json`) to run specific test cases while debugging. This allows you to focus on one or two cases without running the entire suite. Make sure to update the path in your `main` method accordingly:
+
+```java
+String testFile = "binary-tree/01-binary-tree-preorder-traversal/tests-debug.json";
+```
+
+You can also add print statements in your code to log variable values or execution flow. This is especially useful for understanding complex logic or when you're stuck on a specific case. For example, consider these helper methods:
+
+```java
+// For debugging 
+private void printStack(Stack<TreeNode> stack) {
+  StringBuffer buffer = new StringBuffer();
+  buffer.append("[ ");
+  for (TreeNode node : stack) {
+    buffer.append(node.val);
+    buffer.append(", ");
+  }
+  buffer.append("]");
+  System.out.println("Stack: " + buffer.toString());
+}
+
+// For debugging 
+private void push(TreeNode node, Stack<TreeNode> stack) {
+  System.out.print("Push " + node.val + " --- ");
+  stack.push(node);
+  printStack(stack);
+}
+
+// For debugging 
+private TreeNode pop(Stack<TreeNode> stack) {
+  TreeNode node = stack.pop();
+  System.out.print("Pop " + node.val + " --- ");
+  printStack(stack);
+  return node;
+  }
+```
+
+Now you can call `push(node, stack)` and `pop(stack)` instead of directly using `stack.push(node)` and `stack.pop()`. This will print the stack state every time you push or pop a node, helping you understand how your algorithm is progressing.
+
+When I find myself stuck, I often write down my thoughts in the `notes.md` file. This helps me clarify my thinking and often leads to breakthroughs. This technique is known as "rubber duck debugging" - explaining your code to an imaginary friend (or a rubber duck) can help you see problems more clearly.
+
+I encourage you to take a systematic (hypothesis-driven) approach to debugging: In dealing with logical errors, you will often find that you don't know what's going on! Your instinct might be to take the code you have and change it to fix it. One of the worst things you can do is start changing your code without a plan. You will likely be digging yourself deeper! Instead, do this:
+
+1. Gather data about the error that you have encountered.
+2. Through careful observation, make a guess (form a hypothesis) about what the program is doing to cause the bug.
+3. Conduct a test to see if the guess is correct or not (i.e., validate or refute the hypothesis).
+4. If the test contradicts the guess, revise it or replace it with a new guess and go back to step 3.
+5. If the test confirms the guess, use debugging tools to isolate the source of the bug and identify its cause.
+6. Once the bug is localized and identified, determine a fix, apply and test if the fix worked.
+7. Repeat the last step until the bug is fixed.
 
 ## 📚 Available Utilities
 
@@ -475,4 +528,11 @@ Happy coding! 🎉
 
 You can open this folder in IntelliJ. The `leetcode-practice.iml` provides the necessary project structure. IntelliJ will automatically recognize the Java files and provide similar functionality to VS Code, including running and debugging tests.
 
-When you create a new folder for a problem, make sure to right-click the folder and select "Mark Directory as" → "Sources Root" to ensure IntelliJ recognizes it as part of the source path. You should do this for any folder that contains Java files you want to run or debug. 
+When you create a new folder for a problem, make sure to right-click the folder and select "Mark Directory as" → "Sources Root" to ensure IntelliJ recognizes it as part of the source path. You should do this for any folder that contains Java files you want to run or debug.
+
+You can use the following plugins to enhance your IntelliJ experience:
+
+- [**jGRASP**](https://plugins.jetbrains.com/plugin/12769-jgrasp) for visualizing data structures, objects, and primitives while debugging.
+- [**Java Visualizer**](https://plugins.jetbrains.com/plugin/11512-java-visualizer): For visualizing call stacks and objects on the heap while debugging.
+- [**Excalidraw**](https://plugins.jetbrains.com/plugin/17096-excalidraw-integration): For creating diagrams directly in your project.
+- [**CheckStyle-IDEA**](https://plugins.jetbrains.com/plugin/1065-checkstyle-idea): For code style checks and formatting.
