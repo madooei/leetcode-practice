@@ -7,6 +7,9 @@ A professional VS Code environment for practicing LeetCode problems with automat
 - **Java Development Kit (JDK)** 8 or higher (try <https://adoptium.net/> for easy installation)
 - **Visual Studio Code** with the Java Extension Pack (automatically suggested when you open this project)
 
+> [!TIP]
+> Refer to the section on [IntelliJ](#intellij) if you prefer using IntelliJ IDEA.
+
 ## 📁 Project Structure
 
 ```plaintext
@@ -465,6 +468,11 @@ Results: 4/4 tests passed (100.0%)
 
 Happy coding! 🎉
 
----
+> [!TIP]
+> This setup scales beautifully - you can solve hundreds of problems using this same structure, and everything stays organized and easily testable.
 
-**Pro Tip:** This setup scales beautifully - you can solve hundreds of problems using this same structure, and everything stays organized and easily testable.
+## IntelliJ
+
+You can open this folder in IntelliJ. The `leetcode-practice.iml` provides the necessary project structure. IntelliJ will automatically recognize the Java files and provide similar functionality to VS Code, including running and debugging tests.
+
+When you create a new folder for a problem, make sure to right-click the folder and select "Mark Directory as" → "Sources Root" to ensure IntelliJ recognizes it as part of the source path. You should do this for any folder that contains Java files you want to run or debug. 
