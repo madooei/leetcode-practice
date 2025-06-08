@@ -18,6 +18,7 @@ leetcode-practice/
 │   ├── extensions.json     # Recommends Java Extension Pack
 │   └── settings.json       # Java project configuration
 ├── README.md               # This file
+├── TODOs.md                # List of tasks (problems to solves, etc.)
 ├── bin/                    # Compiled Java classes (auto-generated)
 ├── lib/                    # Common utilities (always available)
 │   ├── TestRunner.java     # Test execution framework
@@ -51,6 +52,10 @@ Click **Run** to verify everything works!
 ## 📝 Solving a Problem - Step by Step
 
 Let's walk through solving the **Binary Tree Preorder Traversal** problem as an example.
+
+### Step 0: Update the TODOs.md
+
+Before starting a new problem, update the `TODOs.md` file to include the problem you are about to solve. This helps keep track of your progress and what you plan to work on next.
 
 ### Step 1: Create Your Problem Directory
 
@@ -272,6 +277,16 @@ Another way to keep notes is "journaling" where you write down your thoughts, ch
 
 You can also include links to the original LeetCode problem, relevant articles, or videos that helped you understand the topic better.
 
+### Step 6: Commit, Submit, and Check Off Your TODOs
+
+Once you have completed the problem:
+
+- **Commit your changes** to version control (e.g., Git)
+- **Submit your solution** on LeetCode
+  - There are many more tests available on LeetCode that you can run to verify your solution. If any of those tests fail, you need to go back and fix your code. See the Debugging Guide section below for tips on how to debug your code.
+- **Check off the problem** in your `TODOs.md` file
+  - Update the to-do list to include any follow-up tasks related to this problem, such as reviewing lecture notes or exploring advanced techniques.
+
 ## 🔧 How It All Works
 
 ### VS Code Integration
@@ -344,7 +359,7 @@ String testFile = "binary-tree/01-binary-tree-preorder-traversal/tests-debug.jso
 You can also add print statements in your code to log variable values or execution flow. This is especially useful for understanding complex logic or when you're stuck on a specific case. For example, consider these helper methods:
 
 ```java
-// For debugging 
+// For debugging
 private void printStack(Stack<TreeNode> stack) {
   StringBuffer buffer = new StringBuffer();
   buffer.append("[ ");
@@ -356,14 +371,14 @@ private void printStack(Stack<TreeNode> stack) {
   System.out.println("Stack: " + buffer.toString());
 }
 
-// For debugging 
+// For debugging
 private void push(TreeNode node, Stack<TreeNode> stack) {
   System.out.print("Push " + node.val + " --- ");
   stack.push(node);
   printStack(stack);
 }
 
-// For debugging 
+// For debugging
 private TreeNode pop(Stack<TreeNode> stack) {
   TreeNode node = stack.pop();
   System.out.print("Pop " + node.val + " --- ");
