@@ -120,6 +120,6 @@ public class TreeNode {
 
     @Override
     public String toString() {
-        return toArray(this).toString();
+        return String.valueOf(val);
     }
 }
