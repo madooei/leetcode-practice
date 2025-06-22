@@ -171,6 +171,9 @@ Start with LeetCode examples, then add your own:
 ]
 ```
 
+> [!NOTE]
+> The `input` field uses the LeetCode array format for binary trees. The input can also be an array of strings where each string represents an argument to your solution method. The `expected` field should be a string representation of the expected output.
+
 #### 3.4 Create Your Utility Classes
 
 Looking at the starter code, you need a `TreeNode` class to represent binary tree nodes. You can make this class in the same folder as your problem or in the `lib` folder for reuse across problems.
