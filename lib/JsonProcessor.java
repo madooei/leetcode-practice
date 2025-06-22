@@ -210,11 +210,18 @@ public class JsonProcessor {
             String key = keyValue[0].trim();
             String value = keyValue[1].trim();
 
-            // Remove quotes from key and unescape value
+            // Remove quotes from key
             if (key.startsWith("\"") && key.endsWith("\"")) {
                 key = key.substring(1, key.length() - 1);
             }
-            value = unescapeJsonString(value);
+
+            // For array or object values, don't unescape - preserve as-is
+            if (value.startsWith("[") || value.startsWith("{")) {
+                // Keep arrays and objects as raw JSON strings
+            } else {
+                // Only unescape string values
+                value = unescapeJsonString(value);
+            }
 
             result.put(key, value);
         }
@@ -225,8 +232,9 @@ public class JsonProcessor {
     /**
      * Splits JSON object content into individual key-value pair strings
      * 
-     * This method respects quoted strings and doesn't split on commas within quotes.
-     * It properly handles escaped quotes and maintains string integrity.
+     * This method respects quoted strings, arrays, and objects and doesn't split 
+     * on commas within them. It properly handles escaped quotes and maintains 
+     * structural integrity.
      * 
      * @param content The JSON object content (without outer braces)
      * @return List of key-value pair strings
@@ -234,20 +242,40 @@ public class JsonProcessor {
     private static List<String> splitJsonPairs(String content) {
         List<String> pairs = new ArrayList<>();
         boolean inQuotes = false;
+        int bracketDepth = 0;
+        int braceDepth = 0;
         int start = 0;
 
         // Process character by character
         for (int i = 0; i < content.length(); i++) {
             char c = content.charAt(i);
 
-            // Toggle quote state (handle escaped quotes)
-            if (c == '"' && (i == 0 || content.charAt(i - 1) != '\\')) {
+            // Handle escape sequences
+            if (c == '\\' && i + 1 < content.length()) {
+                i++; // Skip the next character
+                continue;
+            }
+
+            // Toggle quote state
+            if (c == '"') {
                 inQuotes = !inQuotes;
             }
-            // Split on comma only when not inside quotes
-            else if (c == ',' && !inQuotes) {
-                pairs.add(content.substring(start, i).trim());
-                start = i + 1;
+            // Track array and object depth when not in quotes
+            else if (!inQuotes) {
+                if (c == '[') {
+                    bracketDepth++;
+                } else if (c == ']') {
+                    bracketDepth--;
+                } else if (c == '{') {
+                    braceDepth++;
+                } else if (c == '}') {
+                    braceDepth--;
+                }
+                // Split on comma only when at top level
+                else if (c == ',' && bracketDepth == 0 && braceDepth == 0) {
+                    pairs.add(content.substring(start, i).trim());
+                    start = i + 1;
+                }
             }
         }
 
