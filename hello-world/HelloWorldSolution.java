@@ -1,3 +1,5 @@
+import shared.*;
+
 public class HelloWorldSolution {
   public String sayHello(String name) {
     if (name == null || name.trim().isEmpty()) {
@@ -9,8 +11,7 @@ public class HelloWorldSolution {
   public static void main(String[] args) {
     String testFile = "hello-world/tests.json";
     HelloWorldSolution solution = new HelloWorldSolution();
-    TestResultsManager results =
-        TestRunner.runTests(testFile, solution, "sayHello", true, true);
+    TestResultsManager results = TestRunner.runTests(testFile, solution, "sayHello", true, true);
     results.printSummary();
   }
 }

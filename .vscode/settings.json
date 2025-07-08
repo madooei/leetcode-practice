@@ -10,7 +10,9 @@
   "java.compile.nullAnalysis.mode": "automatic",
   "files.exclude": {
     "**/*.class": true,
-    "bin/": true
+    "bin/": true,
+    "out/": true,
+    ".idea/": true
   },
   "java.format.settings.url": "https://raw.githubusercontent.com/google/styleguide/gh-pages/eclipse-java-google-style.xml",
   "java.format.comments.enabled": false,

@@ -15,7 +15,7 @@
     "expected": "Hello, Alice!",
     "got": "Hello, Alice!",
     "status": "✅ PASS",
-    "performance": "Time: 0.013 ms, Memory: 0.05 MB (5 iterations)"
+    "performance": "Time: 0.011 ms, Memory: 0.05 MB (5 iterations)"
   },
   {
     "name": "Null input",
@@ -24,7 +24,7 @@
     "expected": "Hello, World!",
     "got": "Hello, World!",
     "status": "✅ PASS",
-    "performance": "Time: 0.008 ms, Memory: 0.00 MB (5 iterations)"
+    "performance": "Time: 0.012 ms, Memory: 0.00 MB (5 iterations)"
   },
   {
     "name": "Whitespace only",
@@ -33,7 +33,7 @@
     "expected": "Hello, World!",
     "got": "Hello, World!",
     "status": "✅ PASS",
-    "performance": "Time: 0.021 ms, Memory: 0.00 MB (5 iterations)"
+    "performance": "Time: 0.009 ms, Memory: 0.00 MB (5 iterations)"
   },
   {
     "name": "Full name",
@@ -42,7 +42,7 @@
     "expected": "Hello, Bob Smith!",
     "got": "Hello, Bob Smith!",
     "status": "✅ PASS",
-    "performance": "Time: 0.014 ms, Memory: 0.01 MB (5 iterations)"
+    "performance": "Time: 0.012 ms, Memory: 0.01 MB (5 iterations)"
   },
   {
     "name": "Special characters",
@@ -51,6 +51,6 @@
     "expected": "Hello, José!",
     "got": "Hello, José!",
     "status": "✅ PASS",
-    "performance": "Time: 0.017 ms, Memory: 0.01 MB (5 iterations)"
+    "performance": "Time: 0.010 ms, Memory: 0.01 MB (5 iterations)"
   }
 ]

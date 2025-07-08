@@ -1,50 +1,72 @@
 [
   {
-    "name": "Example 1",
-    "input": "[1,null,2,3]",
+    "name": "Example 1: Right-skewed tree",
+    "input": ["[1,null,2,3]"],
+    "inputTypes": ["TreeNode"],
     "expected": "[1,2,3]",
-    "description": "Right-skewed tree with left child"
+    "description": "Tests preorder traversal on a right-skewed tree as shown in the first example."
   },
   {
-    "name": "Example 2",
-    "input": "[]",
-    "expected": "[]",
-    "description": "Empty tree"
-  },
-  {
-    "name": "Example 3",
-    "input": "[1]",
-    "expected": "[1]",
-    "description": "Single node tree"
-  },
-  {
-    "name": "Complete Binary Tree",
-    "input": "[1,2,3,4,5,6,7]",
-    "expected": "[1,2,4,5,3,6,7]",
-    "description": "Complete binary tree - preorder should be root, left subtree, right subtree"
-  },
-  {
-    "name": "Left Skewed Tree",
-    "input": "[1,2,null,3,null,null,null]",
-    "expected": "[1,2,3]",
-    "description": "Left-skewed tree"
-  },
-  {
-    "name": "Right Skewed Tree",
-    "input": "[1,null,2,null,3]",
-    "expected": "[1,2,3]",
-    "description": "Right-skewed tree"
-  },
-  {
-    "name": "Complex Tree",
-    "input": "[3,9,20,null,null,15,7]",
-    "expected": "[3,9,20,15,7]",
-    "description": "Tree with missing nodes"
-  },
-  {
-    "name": "More Complex Tree",
-    "input": "[1,2,3,4,5,null,8,null,null,6,7,9]",
+    "name": "Example 2: Mixed tree with left and right children",
+    "input": ["[1,2,3,4,5,null,8,null,null,6,7,9]"],
+    "inputTypes": ["TreeNode"],
     "expected": "[1,2,4,5,6,7,3,8,9]",
-    "description": "Tree with missing nodes"
+    "description": "Tests preorder traversal on a tree with both left and right children, as in the second example."
+  },
+  {
+    "name": "Example 3: Empty tree",
+    "input": ["[]"],
+    "inputTypes": ["TreeNode"],
+    "expected": "[]",
+    "description": "Tests the edge case where the tree is empty."
+  },
+  {
+    "name": "Example 4: Single node tree",
+    "input": ["[1]"],
+    "inputTypes": ["TreeNode"],
+    "expected": "[1]",
+    "description": "Tests preorder traversal on a tree with only one node."
+  },
+  {
+    "name": "Left-skewed tree",
+    "input": ["[5,4,null,3,null,2,null,1]"],
+    "inputTypes": ["TreeNode"],
+    "expected": "[5,4,3,2,1]",
+    "description": "Tests preorder traversal on a left-skewed tree (all nodes have only left children)."
+  },
+  {
+    "name": "Full binary tree of height 2",
+    "input": ["[1,2,3,4,5,6,7]"],
+    "inputTypes": ["TreeNode"],
+    "expected": "[1,2,4,5,3,6,7]",
+    "description": "Tests preorder traversal on a complete binary tree of height 2."
+  },
+  {
+    "name": "Tree with negative values",
+    "input": ["[-1,-2,-3,null,null,-4,-5]"],
+    "inputTypes": ["TreeNode"],
+    "expected": "[-1,-2,-3,-4,-5]",
+    "description": "Tests preorder traversal on a tree containing negative values."
+  },
+  {
+    "name": "Tree with duplicate values",
+    "input": ["[2,2,2,2,null,null,2]"],
+    "inputTypes": ["TreeNode"],
+    "expected": "[2,2,2,2,2]",
+    "description": "Tests preorder traversal on a tree where all nodes have the same value."
+  },
+  {
+    "name": "Tree with only left and right children at root",
+    "input": ["[10,5,15]"],
+    "inputTypes": ["TreeNode"],
+    "expected": "[10,5,15]",
+    "description": "Tests preorder traversal on a tree with root and two children."
+  },
+  {
+    "name": "Tree with null children in between",
+    "input": ["[1,null,2,null,3]"],
+    "inputTypes": ["TreeNode"],
+    "expected": "[1,2,3]",
+    "description": "Tests preorder traversal on a tree with nulls interleaved between right children."
   }
 ]

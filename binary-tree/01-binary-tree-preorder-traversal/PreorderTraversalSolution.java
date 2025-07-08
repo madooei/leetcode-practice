@@ -1,3 +1,4 @@
+import shared.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
@@ -11,23 +12,24 @@ public class PreorderTraversalSolution {
   // Iterative solution
   private List<Integer> preorderTraversalItr(TreeNode root) {
     List<Integer> values = new ArrayList<>();
-    if (root == null) return values;
-    
+    if (root == null)
+      return values;
+
     Stack<TreeNode> stack = new Stack<>();
     stack.push(root);
-    
+
     while (!stack.isEmpty()) {
-        TreeNode node = stack.pop();
-        values.add(node.val);
-        
-        // Push right first, then left
-        // This ensures left is processed before right (LIFO)
-        if (node.right != null) {
-            stack.push(node.right);
-        }
-        if (node.left != null) {
-            stack.push(node.left);
-        }
+      TreeNode node = stack.pop();
+      values.add(node.val);
+
+      // Push right first, then left
+      // This ensures left is processed before right (LIFO)
+      if (node.right != null) {
+        stack.push(node.right);
+      }
+      if (node.left != null) {
+        stack.push(node.left);
+      }
     }
     return values;
   }
