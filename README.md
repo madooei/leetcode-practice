@@ -20,9 +20,13 @@ leetcode-practice/
 ├── README.md               # This file
 ├── TODOs.md                # List of tasks (problems to solves, etc.)
 ├── bin/                    # Compiled Java classes (auto-generated)
-├── lib/                    # Common utilities (always available)
-│   ├── TestRunner.java     # Test execution framework
-│   └── ... (other utility classes that TestRunner uses)
+├── lib/                    # Testing framework and external libraries
+│   ├── shared/             # Framework classes (use `import shared.*;`)
+│   │   ├── TestRunner.java # Test execution framework
+│   │   ├── TypeParser.java # Universal type parsing
+│   │   ├── TreeNode.java   # Binary tree utilities
+│   │   └── ... (other framework classes)
+│   └── tests/              # Framework test suite
 └── hello-world/            # Template for new problems
     ├── README.md           # Problem statement
     ├── Starter.md          # Original LeetCode template
@@ -80,6 +84,9 @@ cd binary-tree/01-binary-tree-preorder-traversal
   // ... other settings
 }
 ```
+
+> [!NOTE]
+> The `"lib"` entry in source paths provides access to external JAR libraries and framework classes. The framework classes are in the `shared` package, so you'll need to add `import shared.*;` to your solution files.
 
 ### Step 3: Create Problem Files
 
@@ -140,31 +147,35 @@ class Solution {
 
 #### 3.3 Create `tests.json` (Test Cases)
 
-Start with LeetCode examples, then add your own:
+Start with LeetCode examples, then add your own. Use the enhanced format with type hints for precise input interpretation:
 
 ```json
 [
   {
     "name": "Example 1",
-    "input": "[1,null,2,3]",
+    "input": ["[1,null,2,3]"],
+    "inputTypes": ["TreeNode"],
     "expected": "[1,2,3]",
     "description": "Right-skewed tree with left child"
   },
   {
     "name": "Example 2",
-    "input": "[]",
+    "input": ["[]"],
+    "inputTypes": ["TreeNode"],
     "expected": "[]",
     "description": "Empty tree"
   },
   {
     "name": "Example 3",
-    "input": "[1]",
+    "input": ["[1]"],
+    "inputTypes": ["TreeNode"],
     "expected": "[1]",
     "description": "Single node tree"
   },
   {
     "name": "Complete Binary Tree",
-    "input": "[1,2,3,4,5,6,7]",
+    "input": ["[1,2,3,4,5,6,7]"],
+    "inputTypes": ["TreeNode"],
     "expected": "[1,2,4,5,3,6,7]",
     "description": "Complete binary tree - preorder should be root, left subtree, right subtree"
   }
@@ -172,13 +183,55 @@ Start with LeetCode examples, then add your own:
 ```
 
 > [!NOTE]
-> The `input` field uses the LeetCode array format for binary trees. The input can also be an array of strings where each string represents an argument to your solution method. The `expected` field should be a string representation of the expected output.
+> The `input` field is an array where each element represents an argument to your solution method. The `inputTypes` field specifies how to interpret each input (e.g., "TreeNode", "int[]", "String"). The `expected` field should be a string representation of the expected output. This format ensures precise type handling and supports methods with multiple parameters.
 
-#### 3.4 Create Your Utility Classes
+**Supported Input Types:**
+- **TreeNode**: Binary tree from array notation (`"[1,2,3,null,null,4,5]"`)
+- **Arrays**: `"int[]"`, `"String[]"`, `"double[]"`, `"boolean[]"`
+- **2D Arrays**: `"int[][]"`, `"char[][]"`, `"String[][]"`
+- **Collections**: `"List<Integer>"`, `"List<String>"`, `"List<List<Integer>>"`
+- **Primitives**: `"int"`, `"String"`, `"boolean"`, `"double"`, `"long"`, `"char"`
 
-Looking at the starter code, you need a `TreeNode` class to represent binary tree nodes. You can make this class in the same folder as your problem or in the `lib` folder for reuse across problems.
+**Examples for Different Problem Types:**
 
-Look at the course resources! We have many utility classes already available. Copy them to then `lib` folder. For example, our provided `TreeNode` class can handle array input and output:
+*Array Problem (Two Sum):*
+```json
+{
+  "name": "Example 1",
+  "input": ["[2,7,11,15]", "9"],
+  "inputTypes": ["int[]", "int"],
+  "expected": "[0,1]",
+  "description": "Target sum found at indices 0 and 1"
+}
+```
+
+*Matrix Problem (Search 2D Matrix):*
+```json
+{
+  "name": "Matrix Search",
+  "input": ["[[1,4,7,11],[2,5,8,12],[3,6,9,16]]", "5"],
+  "inputTypes": ["int[][]", "int"],
+  "expected": "true",
+  "description": "Target 5 exists in the matrix"
+}
+```
+
+*String Problem (Valid Parentheses):*
+```json
+{
+  "name": "Valid Parentheses",
+  "input": ["()[]{}"],
+  "inputTypes": ["String"],
+  "expected": "true",
+  "description": "All brackets are properly matched"
+}
+```
+
+#### 3.4 Framework Classes Available
+
+Looking at the starter code, you need a `TreeNode` class to represent binary tree nodes. Good news! The framework already provides this in `lib/shared/TreeNode.java`.
+
+The enhanced testing framework includes many utility classes already available in the `shared` package. For example, the provided `TreeNode` class can handle array input and output:
 
 ```java
 // Create tree from LeetCode array format
@@ -195,6 +248,7 @@ List<Integer> arrayForm = TreeNode.toArray(root);
 
 ```java
 import java.util.*;
+import shared.*;  // Import framework classes
 
 public class PreorderTraversalSolution {
   public List<Integer> preorderTraversal(TreeNode root) {
@@ -219,7 +273,7 @@ public class PreorderTraversalSolution {
   - This name must be unique across your problems.
   - Follow the format: `<ProblemName>Solution.java` (e.g., `PreorderTraversalSolution.java`).
 - **Main method**: Add a `main` method to run tests directly.
-- **No imports needed** for `TreeNode`, `TestRunner`, and `TestResultsManager` - they're available from the `lib` folder
+- **Import framework classes** with `import shared.*;` to access `TreeNode`, `TestRunner`, and `TestResultsManager`
 - **Use the full path** to your `tests.json` file relative to the project root
 - The `TestRunner` automatically detects your solution method by name
 - Notice the arguments to `runTests`: the path to your test file, the solution instance, the method name to call, and whether to profile performance (experimental feature).
@@ -303,16 +357,19 @@ The Java Extension Pack provides:
 
 ### Test Framework
 
-The `TestRunner` class:
+The enhanced `TestRunner` class:
 
-1. **Loads test cases** from your `tests.json` file
-2. **Uses reflection** to automatically call your solution method
-3. **Converts inputs** to appropriate types (e.g., `"[1,null,2,3]"` → `TreeNode`)
-4. **Compares outputs** and provides detailed feedback
+1. **Loads test cases** from your `tests.json` file with support for the new format
+2. **Uses type hints** for precise input interpretation when specified
+3. **Supports all LeetCode data types** including arrays, matrices, collections, and custom structures
+4. **Automatically calls** your solution method using reflection
+5. **Converts inputs** to appropriate types (e.g., `"[1,null,2,3]"` → `TreeNode`, `"[1,2,3]"` → `int[]`)
+6. **Compares outputs** and provides detailed feedback with clear pass/fail indicators
 
 ### Directory Structure Benefits
 
-- **`lib/` folder:** Common utilities available everywhere (no imports needed)
+- **`lib/shared/` package:** Framework classes available via `import shared.*;`
+- **`lib/` folder:** External JAR libraries auto-included in classpath
 - **Topic-based organization:** Group related problems together
 - **Numbered problems:** Easy to track progress and find specific problems
 - **Complete documentation:** README, tests, notes, and starter code all in one place
@@ -357,6 +414,19 @@ You can make a copy of `tests.json` (e.g., `tests-debug.json`) to run specific t
 
 ```java
 String testFile = "binary-tree/01-binary-tree-preorder-traversal/tests-debug.json";
+```
+
+**Example debug test file:**
+```json
+[
+  {
+    "name": "Debug Case",
+    "input": ["[1,2,3,4,5]"],
+    "inputTypes": ["TreeNode"],
+    "expected": "[1,2,4,5,3]",
+    "description": "Debugging preorder traversal"
+  }
+]
 ```
 
 You can also add print statements in your code to log variable values or execution flow. This is especially useful for understanding complex logic or when you're stuck on a specific case. For example, consider these helper methods:
@@ -409,11 +479,14 @@ I encourage you to take a systematic (hypothesis-driven) approach to debugging: 
 ### TestRunner Features
 
 - **Automatic method detection:** Finds your solution method by name
-- **Multiple input types:** TreeNode, integers, strings, arrays
+- **Universal type support:** TreeNode, arrays (1D/2D), collections, primitives, and more
+- **Type hints system:** Explicit control over input interpretation using `inputTypes`
+- **Multi-parameter support:** Handle methods with multiple arguments seamlessly
 - **Detailed output:** Shows input, expected, actual, and pass/fail status
 - **Error handling:** Catches exceptions and shows helpful messages
 - **Performance profiling:** Measures execution time and memory usage (experimental)
 - **Performance insights:** Provides performance metrics for each test case and overall summary (experimental)
+- **Comprehensive testing:** Run the framework's own test suite with `./lib/tests/run-all-tests.sh` from project root
 
 ### Third-Party Libraries
 
