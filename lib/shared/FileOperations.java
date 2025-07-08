@@ -1,3 +1,5 @@
+package shared;
+
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
@@ -43,12 +45,12 @@ public class FileOperations {
             // Read the entire file content
             String content = Files.readString(filePath);
 
-            // Parse JSON content into raw maps
-            List<Map<String, String>> rawCases = JsonProcessor.parseTestCases(content);
+            // Parse JSON content into raw maps with Object values (enhanced format)
+            List<Map<String, Object>> rawCases = JsonProcessor.parseTestCasesRaw(content);
 
-            // Convert raw data to TestCase objects
+            // Convert raw data to TestCase objects using enhanced constructor
             List<TestDataModels.TestCase> testCases = new ArrayList<>();
-            for (Map<String, String> rawCase : rawCases) {
+            for (Map<String, Object> rawCase : rawCases) {
                 testCases.add(new TestDataModels.TestCase(rawCase));
             }
 

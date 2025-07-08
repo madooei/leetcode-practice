@@ -1,3 +1,5 @@
+package shared;
+
 import java.util.*;
 
 /**
@@ -18,12 +20,44 @@ public class JsonProcessor {
     /**
      * Parses a JSON string containing an array of test case objects
      * 
+     * Enhanced to support both legacy format (string values only) and new format
+     * (with array/object values for enhanced input handling).
+     * 
      * @param jsonContent The JSON string to parse (must be a JSON array)
      * @return List of maps representing parsed test case objects
      * @throws RuntimeException if JSON format is invalid
      */
     public static List<Map<String, String>> parseTestCases(String jsonContent) {
+        List<Map<String, Object>> rawTestCases = parseTestCasesRaw(jsonContent);
         List<Map<String, String>> testCases = new ArrayList<>();
+
+        // Convert to legacy format for backward compatibility
+        for (Map<String, Object> rawCase : rawTestCases) {
+            Map<String, String> legacyCase = new HashMap<>();
+            for (Map.Entry<String, Object> entry : rawCase.entrySet()) {
+                String key = entry.getKey();
+                Object value = entry.getValue();
+                if (value instanceof String) {
+                    legacyCase.put(key, (String) value);
+                } else {
+                    // Convert non-string values to JSON representation
+                    legacyCase.put(key, objectToJsonString(value));
+                }
+            }
+            testCases.add(legacyCase);
+        }
+
+        return testCases;
+    }
+
+    /**
+     * Parses test cases into raw Object format (supports new enhanced format)
+     * 
+     * @param jsonContent The JSON string to parse
+     * @return List of maps with Object values (preserves arrays and objects)
+     */
+    public static List<Map<String, Object>> parseTestCasesRaw(String jsonContent) {
+        List<Map<String, Object>> testCases = new ArrayList<>();
 
         // Remove whitespace and validate outer brackets
         jsonContent = jsonContent.trim();
@@ -42,7 +76,7 @@ public class JsonProcessor {
 
         // Parse each object and add to results
         for (String obj : objects) {
-            Map<String, String> testCase = parseJsonObject(obj);
+            Map<String, Object> testCase = parseJsonObjectRaw(obj);
             testCases.add(testCase);
         }
 
@@ -285,5 +319,246 @@ public class JsonProcessor {
         }
 
         return pairs;
+    }
+
+    /**
+     * Parses a single JSON object string into a map with Object values
+     * 
+     * This enhanced version preserves arrays and objects as List and Map objects
+     * rather than converting everything to strings.
+     * 
+     * @param jsonObject The JSON object string to parse
+     * @return Map containing the parsed key-value pairs with proper types
+     * @throws RuntimeException if JSON format is invalid
+     */
+    private static Map<String, Object> parseJsonObjectRaw(String jsonObject) {
+        Map<String, Object> result = new HashMap<>();
+
+        // Remove outer braces and trim
+        jsonObject = jsonObject.trim();
+        if (!jsonObject.startsWith("{") || !jsonObject.endsWith("}")) {
+            throw new RuntimeException("Invalid JSON object format");
+        }
+        jsonObject = jsonObject.substring(1, jsonObject.length() - 1).trim();
+
+        if (jsonObject.isEmpty()) {
+            return result;
+        }
+
+        // Split into key-value pairs
+        List<String> pairs = splitJsonPairs(jsonObject);
+
+        // Parse each pair
+        for (String pair : pairs) {
+            String[] keyValue = pair.split(":", 2);
+            if (keyValue.length != 2) {
+                throw new RuntimeException("Invalid key-value pair format: " + pair);
+            }
+
+            String key = keyValue[0].trim();
+            String valueStr = keyValue[1].trim();
+
+            // Remove quotes from key
+            if (key.startsWith("\"") && key.endsWith("\"")) {
+                key = key.substring(1, key.length() - 1);
+            }
+
+            // Parse value based on its type
+            Object value = parseJsonValue(valueStr);
+            result.put(key, value);
+        }
+
+        return result;
+    }
+
+    /**
+     * Parses a JSON value and returns the appropriate Java object
+     * 
+     * @param valueStr The JSON value string to parse
+     * @return Parsed object (String, List, Map, Boolean, Number, or null)
+     */
+    private static Object parseJsonValue(String valueStr) {
+        valueStr = valueStr.trim();
+
+        // Handle null
+        if (valueStr.equals("null")) {
+            return null;
+        }
+
+        // Handle arrays
+        if (valueStr.startsWith("[") && valueStr.endsWith("]")) {
+            return parseJsonArray(valueStr);
+        }
+
+        // Handle objects
+        if (valueStr.startsWith("{") && valueStr.endsWith("}")) {
+            return parseJsonObjectRaw(valueStr);
+        }
+
+        // Handle booleans
+        if (valueStr.equals("true")) {
+            return true;
+        }
+        if (valueStr.equals("false")) {
+            return false;
+        }
+
+        // Handle numbers
+        try {
+            if (valueStr.contains(".")) {
+                return Double.parseDouble(valueStr);
+            } else {
+                return Long.parseLong(valueStr);
+            }
+        } catch (NumberFormatException e) {
+            // Not a number, treat as string
+        }
+
+        // Handle strings (remove quotes and unescape)
+        return unescapeJsonString(valueStr);
+    }
+
+    /**
+     * Parses a JSON array into a List
+     * 
+     * @param arrayStr The JSON array string
+     * @return List containing parsed elements
+     */
+    private static List<Object> parseJsonArray(String arrayStr) {
+        List<Object> result = new ArrayList<>();
+
+        // Remove outer brackets
+        arrayStr = arrayStr.substring(1, arrayStr.length() - 1).trim();
+        if (arrayStr.isEmpty()) {
+            return result;
+        }
+
+        // Split array elements
+        List<String> elements = splitArrayElements(arrayStr);
+
+        // Parse each element
+        for (String element : elements) {
+            result.add(parseJsonValue(element.trim()));
+        }
+
+        return result;
+    }
+
+    /**
+     * Splits array elements while respecting nested structures
+     * 
+     * @param content The array content (without outer brackets)
+     * @return List of element strings
+     */
+    private static List<String> splitArrayElements(String content) {
+        List<String> elements = new ArrayList<>();
+        boolean inQuotes = false;
+        int bracketDepth = 0;
+        int braceDepth = 0;
+        int start = 0;
+
+        for (int i = 0; i < content.length(); i++) {
+            char c = content.charAt(i);
+
+            // Handle escape sequences
+            if (c == '\\' && i + 1 < content.length()) {
+                i++; // Skip the next character
+                continue;
+            }
+
+            // Toggle quote state
+            if (c == '"') {
+                inQuotes = !inQuotes;
+            }
+            // Track depth when not in quotes
+            else if (!inQuotes) {
+                if (c == '[') {
+                    bracketDepth++;
+                } else if (c == ']') {
+                    bracketDepth--;
+                } else if (c == '{') {
+                    braceDepth++;
+                } else if (c == '}') {
+                    braceDepth--;
+                }
+                // Split on comma only at top level
+                else if (c == ',' && bracketDepth == 0 && braceDepth == 0) {
+                    elements.add(content.substring(start, i).trim());
+                    start = i + 1;
+                }
+            }
+        }
+
+        // Add the final element
+        if (start < content.length()) {
+            elements.add(content.substring(start).trim());
+        }
+
+        return elements;
+    }
+
+    /**
+     * Converts an Object to JSON string representation
+     * 
+     * @param obj The object to convert
+     * @return JSON string representation
+     */
+    private static String objectToJsonString(Object obj) {
+        if (obj == null) {
+            return "null";
+        }
+
+        if (obj instanceof String) {
+            return "\"" + escapeJsonString((String) obj) + "\"";
+        }
+
+        if (obj instanceof Boolean || obj instanceof Number) {
+            return obj.toString();
+        }
+
+        if (obj instanceof List) {
+            List<?> list = (List<?>) obj;
+            StringBuilder sb = new StringBuilder("[");
+            for (int i = 0; i < list.size(); i++) {
+                if (i > 0)
+                    sb.append(", ");
+                sb.append(objectToJsonString(list.get(i)));
+            }
+            sb.append("]");
+            return sb.toString();
+        }
+
+        if (obj instanceof Map) {
+            Map<?, ?> map = (Map<?, ?>) obj;
+            StringBuilder sb = new StringBuilder("{");
+            boolean first = true;
+            for (Map.Entry<?, ?> entry : map.entrySet()) {
+                if (!first)
+                    sb.append(", ");
+                first = false;
+                sb.append("\"").append(entry.getKey()).append("\": ");
+                sb.append(objectToJsonString(entry.getValue()));
+            }
+            sb.append("}");
+            return sb.toString();
+        }
+
+        // Fallback: convert to string and quote
+        return "\"" + escapeJsonString(obj.toString()) + "\"";
+    }
+
+    /**
+     * Escapes a string for JSON representation
+     * 
+     * @param str The string to escape
+     * @return Escaped string
+     */
+    private static String escapeJsonString(String str) {
+        if (str == null)
+            return "";
+
+        return str.replace("\\", "\\\\").replace("\"", "\\\"").replace("\b", "\\b")
+                .replace("\f", "\\f").replace("\n", "\\n").replace("\r", "\\r")
+                .replace("\t", "\\t");
     }
 }

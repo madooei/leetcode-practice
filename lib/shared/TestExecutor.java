@@ -1,3 +1,5 @@
+package shared;
+
 import java.lang.reflect.*;
 import java.util.*;
 
@@ -46,8 +48,8 @@ public class TestExecutor {
             // Display test information
             printTestHeader(testNumber, testCase);
 
-            // Parse input arguments based on method signature
-            Object[] args = parseMethodArguments(solutionMethod, testCase.input);
+            // Parse input arguments based on method signature and optional type hints
+            Object[] args = parseMethodArguments(solutionMethod, testCase);
 
             // Execute the method with optional performance measurement
             Object result = executeMethodWithProfiling(solutionInstance, solutionMethod, args,
@@ -105,24 +107,25 @@ public class TestExecutor {
     }
 
     /**
-     * Parses method arguments based on parameter types
+     * Parses method arguments based on parameter types and optional type hints
      * 
-     * This method analyzes the method signature and converts the input(s)
+     * This enhanced method analyzes the method signature and converts the input(s)
      * into appropriate argument objects. It supports both single string inputs
      * (backward compatibility) and array inputs (for multiple parameters).
      * 
-     * Supported parameter types:
-     * - TreeNode parsing for binary tree problems
-     * - Integer/int parameter parsing
-     * - String parameter parsing (with quote handling)
-     * - Null value handling
+     * Enhanced with comprehensive type support including:
+     * - All primitive types and their wrappers
+     * - Arrays (1D and 2D) of all types
+     * - Collections (List<Integer>, List<String>, etc.)
+     * - LeetCode structures (TreeNode, ListNode, etc.)
+     * - Optional type hints for explicit control
      * 
      * @param method The method to analyze for parameter types
-     * @param input The input string or array to parse
+     * @param testCase The test case containing input data and optional type hints
      * @return Array of parsed arguments ready for method invocation
      * @throws RuntimeException if parameter types are unsupported
      */
-    private static Object[] parseMethodArguments(Method method, String input) {
+    private static Object[] parseMethodArguments(Method method, TestDataModels.TestCase testCase) {
         Class<?>[] paramTypes = method.getParameterTypes();
 
         // Handle methods with no parameters
@@ -131,7 +134,7 @@ public class TestExecutor {
         }
 
         // Determine if input should be parsed as multiple parameters based on method signature
-        String[] inputValues = parseInputValues(input, paramTypes.length);
+        String[] inputValues = parseInputValues(testCase.input, paramTypes.length);
 
         // Validate parameter count matches input count
         if (paramTypes.length != inputValues.length) {
@@ -140,10 +143,18 @@ public class TestExecutor {
                             + paramTypes.length + " but got " + inputValues.length + " inputs");
         }
 
-        // Parse each parameter according to its type
+        // Validate type hints if provided
+        if (testCase.hasTypeHints() && testCase.inputTypes.length != paramTypes.length) {
+            throw new RuntimeException("Type hint count mismatch for method " + method.getName()
+                    + ": expected " + paramTypes.length + " but got " + testCase.inputTypes.length
+                    + " type hints");
+        }
+
+        // Parse each parameter according to its type and optional type hint
         Object[] args = new Object[paramTypes.length];
         for (int i = 0; i < paramTypes.length; i++) {
-            args[i] = parseParameter(paramTypes[i], inputValues[i]);
+            String typeHint = testCase.hasTypeHints() ? testCase.inputTypes[i] : null;
+            args[i] = TypeParser.parseParameter(paramTypes[i], inputValues[i], typeHint);
         }
 
         return args;
@@ -162,14 +173,8 @@ public class TestExecutor {
     private static String[] parseInputValues(String input, int expectedParamCount) {
         input = input.trim();
 
-        // If method expects only one parameter, treat everything as single input
-        // This handles TreeNode arrays like [1,null,2,3] correctly
-        if (expectedParamCount == 1) {
-            return new String[] {input};
-        }
-
-        // For multi-parameter methods, try to parse as JSON array
-        if (input.startsWith("[") && input.endsWith("]")) {
+        // For multi-parameter methods, try to parse as JSON array first
+        if (input.startsWith("[") && input.endsWith("]") && expectedParamCount > 1) {
             String[] params = parseJsonArray(input);
 
             // If we get the expected number of parameters, use them
@@ -178,7 +183,19 @@ public class TestExecutor {
             }
         }
 
-        // Fallback: treat as single input (may cause parameter count mismatch error later)
+        // For single parameter methods, check if input is in JSON array format
+        if (expectedParamCount == 1 && input.startsWith("[") && input.endsWith("]")) {
+            // Check if this is a JSON array with one element (enhanced format)
+            String[] params = parseJsonArray(input);
+            if (params.length == 1) {
+                // Single element in array - use the unwrapped value
+                return new String[] {params[0]};
+            }
+            // Otherwise, treat as single input (e.g., TreeNode array [1,2,3])
+            return new String[] {input};
+        }
+
+        // Fallback: treat as single input
         return new String[] {input};
     }
 
@@ -186,7 +203,7 @@ public class TestExecutor {
      * Parses a JSON array string into individual values
      * 
      * @param jsonArray The JSON array string to parse
-     * @return Array of individual string values
+     * @return Array of individual string values (with quotes removed where appropriate)
      */
     private static String[] parseJsonArray(String jsonArray) {
         // Remove outer brackets
@@ -224,7 +241,8 @@ public class TestExecutor {
                     depth--;
                 } else if (c == ',' && depth == 0) {
                     // Found separator at top level
-                    values.add(content.substring(start, i).trim());
+                    String value = content.substring(start, i).trim();
+                    values.add(unquoteValue(value));
                     start = i + 1;
                 }
             }
@@ -232,99 +250,32 @@ public class TestExecutor {
 
         // Add the last value
         if (start < content.length()) {
-            values.add(content.substring(start).trim());
+            String value = content.substring(start).trim();
+            values.add(unquoteValue(value));
         }
 
         return values.toArray(new String[0]);
     }
 
     /**
-     * Parses a single parameter based on its type
+     * Removes quotes from a string value if present
      * 
-     * @param paramType The expected parameter type
-     * @param inputValue The string value to parse
-     * @return The parsed parameter object
-     * @throws RuntimeException if parameter type is unsupported
+     * @param value The value to unquote
+     * @return The unquoted value
      */
-    private static Object parseParameter(Class<?> paramType, String inputValue) {
-        // Handle TreeNode parameter for binary tree problems
-        if (paramType.getSimpleName().equals("TreeNode")) {
-            // Remove quotes from TreeNode input if present
-            String cleanInput = parseStringValue(inputValue);
-            Integer[] array = TreeNode.parseArray(cleanInput);
-            return TreeNode.fromArray(array);
+    private static String unquoteValue(String value) {
+        if (value == null || value.length() < 2) {
+            return value;
         }
 
-        // Handle integer parameters
-        if (paramType == int.class || paramType == Integer.class) {
-            // Remove quotes if present
-            String cleanInput = parseStringValue(inputValue);
-            return Integer.parseInt(cleanInput.trim());
+        // Remove surrounding quotes for string values
+        if (value.startsWith("\"") && value.endsWith("\"")) {
+            return value.substring(1, value.length() - 1);
         }
 
-        // Handle string parameters
-        if (paramType == String.class) {
-            return parseStringValue(inputValue);
-        }
-
-        // Handle boolean parameters
-        if (paramType == boolean.class || paramType == Boolean.class) {
-            String cleanInput = parseStringValue(inputValue);
-            return Boolean.parseBoolean(cleanInput.trim().toLowerCase());
-        }
-
-        // Handle double parameters
-        if (paramType == double.class || paramType == Double.class) {
-            String cleanInput = parseStringValue(inputValue);
-            return Double.parseDouble(cleanInput.trim());
-        }
-
-        // Handle long parameters
-        if (paramType == long.class || paramType == Long.class) {
-            String cleanInput = parseStringValue(inputValue);
-            return Long.parseLong(cleanInput.trim());
-        }
-
-        throw new RuntimeException("Unsupported parameter type: " + paramType.getName());
+        return value;
     }
 
-    /**
-     * Parses string values with proper null and quote handling
-     * 
-     * @param input The input string to parse
-     * @return The parsed string value
-     */
-    private static String parseStringValue(String input) {
-        input = input.trim();
-
-        // Handle null input
-        if (input.equals("null")) {
-            return null;
-        }
-
-        // Remove surrounding quotes for string inputs (may have multiple levels)
-        // Handle escaped quotes properly
-        while (input.startsWith("\"") && input.endsWith("\"") && input.length() >= 2) {
-            String unquoted = input.substring(1, input.length() - 1);
-
-            // If after removing quotes we still have quotes, and they are escaped, unescape them
-            if (unquoted.startsWith("\\\"") && unquoted.endsWith("\\\"")) {
-                unquoted = unquoted.substring(2, unquoted.length() - 2);
-            }
-
-            input = unquoted;
-
-            // Prevent infinite loop if the string doesn't change
-            if (input.equals(unquoted)) {
-                break;
-            }
-        }
-
-        // Handle remaining escape sequences
-        input = input.replace("\\\"", "\"").replace("\\\\", "\\");
-
-        return input;
-    }
 
     /**
      * Executes a method with optional performance profiling

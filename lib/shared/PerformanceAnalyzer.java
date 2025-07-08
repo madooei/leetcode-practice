@@ -1,3 +1,5 @@
+package shared;
+
 import java.lang.reflect.*;
 import java.util.*;
 
@@ -242,7 +244,8 @@ public class PerformanceAnalyzer {
      * @param dataPoints List of input size and timing measurements
      * @return ComplexityAnalysis with performance insights
      */
-    private static ComplexityAnalysis analyzePerformanceCharacteristics(List<DataPoint> dataPoints) {
+    private static ComplexityAnalysis analyzePerformanceCharacteristics(
+            List<DataPoint> dataPoints) {
         // Calculate basic statistics
         double[] times = dataPoints.stream().mapToDouble(dp -> dp.timeMs).toArray();
         double meanTime = calculateMean(times);
@@ -260,8 +263,8 @@ public class PerformanceAnalyzer {
         }
 
         // Calculate average time ratio
-        double avgTimeRatio = timeRatios.isEmpty() ? 1.0 : calculateMean(
-                timeRatios.stream().mapToDouble(Double::doubleValue).toArray());
+        double avgTimeRatio = timeRatios.isEmpty() ? 1.0
+                : calculateMean(timeRatios.stream().mapToDouble(Double::doubleValue).toArray());
 
         // Generate insights based on observed patterns
         String description;

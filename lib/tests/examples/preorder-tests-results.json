@@ -1,0 +1,20 @@
+[
+  {
+    "name": "Binary Tree Preorder (Legacy Format)",
+    "description": "Tree traversal using legacy format - automatic type detection",
+    "input": "[1,null,2,3]",
+    "expected": "[1,2,3]",
+    "got": "[1,2,3]",
+    "status": "✅ PASS",
+    "performance": "Time: 0.009 ms, Memory: 0.00 MB (5 iterations)"
+  },
+  {
+    "name": "Binary Tree Preorder (Enhanced Format)",
+    "description": "Tree traversal using enhanced format with explicit type hint",
+    "input": "[\"[1,2,3,4,5]\"]",
+    "expected": "[1,2,4,5,3]",
+    "got": "[1,2,4,5,3]",
+    "status": "✅ PASS",
+    "performance": "Time: 0.012 ms, Memory: 0.05 MB (5 iterations)"
+  }
+]

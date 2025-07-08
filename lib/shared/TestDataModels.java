@@ -1,3 +1,5 @@
+package shared;
+
 import java.util.*;
 
 /**
@@ -14,14 +16,21 @@ public class TestDataModels {
      * 
      * This immutable data structure encapsulates all information needed to execute
      * a single test case including the test name, input data, expected result,
-     * and optional description for documentation purposes.
+     * optional type hints for explicit input interpretation, and optional description
+     * for documentation purposes.
+     * 
+     * Enhanced to support both legacy single-input format and new multi-input format
+     * with optional type hints for precise data structure interpretation.
      */
     public static class TestCase {
         /** The name/identifier of the test case */
         public final String name;
 
-        /** The input data for the test (as string representation) */
+        /** The input data for the test (as string representation or JSON array) */
         public final String input;
+
+        /** Optional type hints for input interpretation (null for automatic detection) */
+        public final String[] inputTypes;
 
         /** The expected output/result (as string representation) */
         public final String expected;
@@ -32,13 +41,67 @@ public class TestDataModels {
         /**
          * Constructs a TestCase from a map of string data
          * 
-         * @param data Map containing test case data with keys: name, input, expected, description
+         * Supports both legacy format and new format with inputTypes:
+         * Legacy: {"name": "test", "input": "value", "expected": "result"}
+         * New: {"name": "test", "input": ["val1", "val2"], "inputTypes": ["int", "String"], "expected": "result"}
+         * 
+         * @param data Map containing test case data with keys: name, input, expected, description, inputTypes
          */
-        public TestCase(Map<String, String> data) {
-            this.name = data.getOrDefault("name", "Unknown");
-            this.input = data.getOrDefault("input", "");
-            this.expected = data.getOrDefault("expected", "");
-            this.description = data.getOrDefault("description", "");
+        public TestCase(Map<String, Object> data) {
+            this.name = (String) data.getOrDefault("name", "Unknown");
+
+            // Handle both string and array input formats
+            Object inputObj = data.get("input");
+            if (inputObj instanceof String) {
+                this.input = (String) inputObj;
+            } else if (inputObj instanceof List) {
+                // Convert list to JSON array string
+                List<?> inputList = (List<?>) inputObj;
+                this.input = convertListToJsonArray(inputList);
+            } else {
+                this.input = "";
+            }
+
+            this.expected = (String) data.getOrDefault("expected", "");
+            this.description = (String) data.getOrDefault("description", "");
+
+            // Handle inputTypes field (optional)
+            Object typesObj = data.get("inputTypes");
+            if (typesObj instanceof List) {
+                List<?> typesList = (List<?>) typesObj;
+                this.inputTypes = typesList.stream().map(Object::toString).toArray(String[]::new);
+            } else {
+                this.inputTypes = null; // Use automatic type detection
+            }
+        }
+
+
+        /**
+         * Converts a list to JSON array string representation
+         * 
+         * @param list The list to convert
+         * @return JSON array string
+         */
+        private String convertListToJsonArray(List<?> list) {
+            StringBuilder sb = new StringBuilder("[");
+            for (int i = 0; i < list.size(); i++) {
+                if (i > 0)
+                    sb.append(", ");
+                Object item = list.get(i);
+                // Don't add extra quotes - preserve the original string format
+                sb.append("\"").append(item).append("\"");
+            }
+            sb.append("]");
+            return sb.toString();
+        }
+
+        /**
+         * Checks if this test case has explicit type hints
+         * 
+         * @return true if inputTypes are specified
+         */
+        public boolean hasTypeHints() {
+            return inputTypes != null && inputTypes.length > 0;
         }
 
         /**
@@ -46,8 +109,9 @@ public class TestDataModels {
          */
         @Override
         public String toString() {
-            return String.format("TestCase{name='%s', input='%s', expected='%s'}", name, input,
-                    expected);
+            String typeInfo = hasTypeHints() ? ", types=" + Arrays.toString(inputTypes) : "";
+            return String.format("TestCase{name='%s', input='%s', expected='%s'%s}", name, input,
+                    expected, typeInfo);
         }
     }
 

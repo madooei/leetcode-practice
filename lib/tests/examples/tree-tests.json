@@ -1,0 +1,15 @@
+[
+  {
+    "name": "Binary Tree Preorder (Legacy Format)",
+    "input": "[1,null,2,3]",
+    "expected": "[1,2,3]",
+    "description": "Tree traversal using legacy format - automatic type detection"
+  },
+  {
+    "name": "Binary Tree Preorder (Enhanced Format)",
+    "input": ["[1,2,3,4,5]"],
+    "inputTypes": ["TreeNode"],
+    "expected": "[1,2,4,5,3]",
+    "description": "Tree traversal using enhanced format with explicit type hint"
+  }
+]
