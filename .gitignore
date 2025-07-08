@@ -4,7 +4,7 @@
 !.vscode/*.code-snippets
 !.vscode/extensions.json
 !.vscode/settings.json
-.idea/*
+.idea/
 !.idea/workspace.xml
 
 # env
@@ -16,5 +16,5 @@
 
 # Build artifacts
 bin
-out
 *.class
+out
